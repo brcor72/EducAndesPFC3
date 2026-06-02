@@ -1,4 +1,7 @@
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
+
+# Instalar OpenSSL para Prisma
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -12,11 +15,14 @@ COPY . .
 RUN npm run build
 
 # ── Production stage ────────────────────────────────────────────────────────
-FROM node:20-alpine AS production
+FROM node:20-slim AS production
+
+# Instalar OpenSSL (requerido por Prisma en runtime)
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 
 COPY package*.json ./
 RUN npm ci --omit=dev
