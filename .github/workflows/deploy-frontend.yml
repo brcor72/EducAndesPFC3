@@ -39,6 +39,7 @@ jobs:
         working-directory: ./frontend
         env:
           VITE_API_URL: https://educandes-backend.onrender.com/api/v1
+          GITHUB_PAGES: "true"
         run: npm run build
 
       - name: Setup Pages
