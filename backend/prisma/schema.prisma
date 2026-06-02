@@ -1,0 +1,332 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum CourseLevel {
+  INICIAL
+  INTERMEDIO
+  AVANZADO
+}
+
+enum CourseCategory {
+  CAMPO
+  NEGOCIO
+  TECNOLOGIA
+  ENERGIA
+}
+
+enum NotificationType {
+  COURSE_PROGRESS
+  FORUM_REPLY
+  ACHIEVEMENT
+  SYSTEM
+  REMINDER
+}
+
+enum Lang {
+  es
+  qu
+  ay
+  shp
+}
+
+// ─── Auth & Users ─────────────────────────────────────────────────────────────
+
+model User {
+  id            String   @id @default(uuid())
+  dni           String   @unique @db.VarChar(8)
+  email         String?  @unique @db.VarChar(255)
+  displayName   String   @db.VarChar(100)
+  community     String?  @db.VarChar(100)
+  preferredLang Lang     @default(es)
+  passwordHash  String
+  avatarUrl     String?
+  roleId        String
+  role          Role     @relation(fields: [roleId], references: [id])
+  isActive      Boolean  @default(true)
+  deletedAt     DateTime?
+
+  refreshTokens   RefreshToken[]
+  progress        CourseProgress[]
+  forumThreads    ForumThread[]
+  forumReplies    ForumReply[]
+  quizSubmissions QuizSubmission[]
+  notifications   Notification[]
+  auditLogs       AuditLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dni])
+  @@index([roleId])
+  @@map("users")
+}
+
+model Role {
+  id          String   @id @default(uuid())
+  name        String   @unique @db.VarChar(50)
+  description String?
+  users       User[]
+  permissions RolePermission[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  resource    String   @db.VarChar(50)
+  action      String   @db.VarChar(20)
+  description String?
+  roles       RolePermission[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([resource, action])
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  ipAddress String?  @db.VarChar(45)
+  userAgent String?  @db.VarChar(500)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
+}
+
+// ─── Courses & Lessons ────────────────────────────────────────────────────────
+
+model Course {
+  id            String         @id @default(uuid())
+  slug          String         @unique @db.VarChar(100)
+  title         String         @db.VarChar(200)
+  titleQu       String?        @db.VarChar(200)
+  titleAy       String?        @db.VarChar(200)
+  short         String         @db.VarChar(300)
+  shortQu       String?        @db.VarChar(300)
+  long          String         @db.Text
+  imageUrl      String?        @db.VarChar(500)
+  iconName      String?        @db.VarChar(50)
+  level         CourseLevel    @default(INICIAL)
+  durationWeeks Int            @default(4)
+  category      CourseCategory
+  isPublished   Boolean        @default(false)
+  deletedAt     DateTime?
+  sortOrder     Int            @default(0)
+
+  lessons      Lesson[]
+  progress     CourseProgress[]
+  forumThreads ForumThread[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@index([isPublished])
+  @@map("courses")
+}
+
+model Lesson {
+  id       String @id @default(uuid())
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  index    Int
+
+  title    String @db.VarChar(200)
+  summary  String @db.VarChar(400)
+  detail   String @db.Text
+
+  isPractice       Boolean @default(false)
+  practiceTitle    String? @db.VarChar(200)
+  practiceScenario String? @db.Text
+  practiceHint     String? @db.Text
+
+  quizQuestions QuizQuestion[]
+  deletedAt     DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([courseId, index])
+  @@index([courseId])
+  @@map("lessons")
+}
+
+model QuizQuestion {
+  id       String @id @default(uuid())
+  lessonId String
+  lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  order    Int    @default(0)
+
+  question String   @db.Text
+  options  String[]
+  answer   Int
+
+  submissions QuizSubmission[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([lessonId])
+  @@map("quiz_questions")
+}
+
+model QuizSubmission {
+  id             String       @id @default(uuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questionId     String
+  question       QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedAnswer Int
+  isCorrect      Boolean
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, questionId])
+  @@map("quiz_submissions")
+}
+
+// ─── Progress ─────────────────────────────────────────────────────────────────
+
+model CourseProgress {
+  id       String @id @default(uuid())
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  lessonsDone    Int      @default(0)
+  lessonsTotal   Int      @default(12)
+  dailyGoal      Int      @default(1)
+  lastActivityAt DateTime @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, courseId])
+  @@index([userId])
+  @@map("course_progress")
+}
+
+// ─── Forums ───────────────────────────────────────────────────────────────────
+
+model ForumThread {
+  id       String @id @default(uuid())
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
+
+  title     String @db.VarChar(300)
+  body      String @db.Text
+  replies   ForumReply[]
+  isPinned  Boolean  @default(false)
+  deletedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([courseId])
+  @@index([authorId])
+  @@map("forum_threads")
+}
+
+model ForumReply {
+  id       String      @id @default(uuid())
+  threadId String
+  thread   ForumThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  authorId String
+  author   User        @relation(fields: [authorId], references: [id])
+
+  body      String   @db.Text
+  deletedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([threadId])
+  @@map("forum_replies")
+}
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+
+model Notification {
+  id       String           @id @default(uuid())
+  userId   String
+  user     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title    String           @db.VarChar(200)
+  message  String           @db.Text
+  type     NotificationType @default(SYSTEM)
+  isRead   Boolean          @default(false)
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+// ─── Audit & Settings ─────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String  @id @default(uuid())
+  userId     String?
+  user       User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action     String  @db.VarChar(50)
+  resource   String  @db.VarChar(50)
+  resourceId String? @db.VarChar(100)
+  oldData    Json?
+  newData    Json?
+  ipAddress  String? @db.VarChar(45)
+  userAgent  String? @db.VarChar(500)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([resource, resourceId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+model Setting {
+  id    String @id @default(uuid())
+  key   String @unique @db.VarChar(100)
+  value String @db.Text
+  type  String @default("string") @db.VarChar(20)
+  group String @default("general") @db.VarChar(50)
+  label String? @db.VarChar(200)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([group])
+  @@map("settings")
+}

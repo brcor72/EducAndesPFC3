@@ -1,0 +1,144 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Sistema de diseño "Allin Yachay" — Aprender Bien.
+ * Paleta inspirada en la sierra andina del Perú:
+ * terracota, ocre maíz, verde puna, cielo serrano, marrón tierra.
+ */
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 6px);
+  --radius-2xl: calc(var(--radius) + 14px);
+  --radius-3xl: calc(var(--radius) + 22px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-sun: var(--sun);
+  --color-sun-foreground: var(--sun-foreground);
+  --color-earth: var(--earth);
+  --color-earth-foreground: var(--earth-foreground);
+  --color-sky: var(--sky);
+  --color-sky-foreground: var(--sky-foreground);
+  --color-puna: var(--puna);
+  --color-puna-foreground: var(--puna-foreground);
+
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+  --font-sans: "Nunito", ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --radius: 1rem;
+
+  /* Base — papel andino, cálido */
+  --background: oklch(0.975 0.02 80);
+  --foreground: oklch(0.25 0.04 40);
+
+  --card: oklch(0.99 0.012 80);
+  --card-foreground: oklch(0.25 0.04 40);
+  --popover: oklch(0.99 0.012 80);
+  --popover-foreground: oklch(0.25 0.04 40);
+
+  /* Terracota — color principal de la marca */
+  --primary: oklch(0.58 0.16 38);
+  --primary-foreground: oklch(0.985 0.01 80);
+
+  /* Verde puna — botón secundario, naturaleza */
+  --secondary: oklch(0.55 0.12 150);
+  --secondary-foreground: oklch(0.985 0.01 80);
+
+  --muted: oklch(0.94 0.02 80);
+  --muted-foreground: oklch(0.45 0.04 50);
+
+  /* Ocre maíz */
+  --accent: oklch(0.82 0.14 80);
+  --accent-foreground: oklch(0.25 0.04 40);
+
+  --destructive: oklch(0.55 0.22 28);
+  --destructive-foreground: oklch(0.99 0.01 80);
+
+  --border: oklch(0.88 0.03 70);
+  --input: oklch(0.9 0.025 70);
+  --ring: oklch(0.58 0.16 38);
+
+  /* Tokens andinos extendidos */
+  --sun: oklch(0.82 0.16 78);
+  --sun-foreground: oklch(0.25 0.05 40);
+  --earth: oklch(0.4 0.07 40);
+  --earth-foreground: oklch(0.985 0.01 80);
+  --sky: oklch(0.78 0.08 230);
+  --sky-foreground: oklch(0.25 0.05 250);
+  --puna: oklch(0.55 0.12 150);
+  --puna-foreground: oklch(0.985 0.01 80);
+
+  /* Gradientes y sombras */
+  --gradient-sunrise: linear-gradient(135deg, oklch(0.82 0.16 78) 0%, oklch(0.65 0.18 45) 50%, oklch(0.55 0.18 30) 100%);
+  --gradient-andes: linear-gradient(180deg, oklch(0.88 0.06 220) 0%, oklch(0.75 0.1 80) 60%, oklch(0.55 0.16 38) 100%);
+  --gradient-soft: linear-gradient(180deg, oklch(0.99 0.012 80) 0%, oklch(0.94 0.04 75) 100%);
+
+  --shadow-warm: 0 12px 30px -12px oklch(0.55 0.18 38 / 0.35);
+  --shadow-soft: 0 8px 24px -10px oklch(0.4 0.05 40 / 0.18);
+
+  /* Patrón textil andino (chakana / rombos) */
+  --pattern-andino:
+    radial-gradient(circle at 10px 10px, oklch(0.58 0.16 38 / 0.18) 2px, transparent 2.5px),
+    radial-gradient(circle at 30px 30px, oklch(0.55 0.12 150 / 0.18) 2px, transparent 2.5px);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    font-size: 17px;
+    line-height: 1.6;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+  }
+}
+
+@layer utilities {
+  .bg-gradient-sunrise { background-image: var(--gradient-sunrise); }
+  .bg-gradient-andes { background-image: var(--gradient-andes); }
+  .bg-gradient-soft { background-image: var(--gradient-soft); }
+  .shadow-warm { box-shadow: var(--shadow-warm); }
+  .shadow-soft { box-shadow: var(--shadow-soft); }
+  .bg-andino-pattern {
+    background-image: var(--pattern-andino);
+    background-size: 40px 40px;
+  }
+  .text-balance { text-wrap: balance; }
+}
