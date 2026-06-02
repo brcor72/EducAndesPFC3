@@ -37,4 +37,4 @@ USER appuser
 EXPOSE 3001
 
 # Ejecutar migraciones y arrancar (seed se ejecuta manualmente desde Railway)
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main || node dist/main"]
