@@ -30,5 +30,5 @@ USER appuser
 
 EXPOSE 3001
 
-# Run migrations + seed on startup, then start the server
-CMD sh -c "npx prisma migrate deploy && npx ts-node prisma/seed.ts 2>/dev/null || true && node dist/main"
+# Ejecutar migraciones y arrancar (seed se ejecuta manualmente desde Railway)
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main"]
