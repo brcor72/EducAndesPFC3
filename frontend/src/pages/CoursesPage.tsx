@@ -98,7 +98,7 @@ export default function CoursesPage() {
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center gap-4 py-20 text-center text-muted-foreground">
             <span className="text-5xl">🔍</span>
-            <p className="text-lg font-bold">No se encontraron cursos</p>
+            <p className="text-lg font-bold">{tr('noCoursesFound')}</p>
           </div>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

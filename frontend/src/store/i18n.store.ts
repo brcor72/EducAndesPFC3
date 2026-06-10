@@ -22,6 +22,7 @@ const translations: Record<Lang, Record<string, string>> = {
     navAdmin: 'Panel admin',
     navSettings: 'Configuración',
     navSelectLang: 'Idioma',
+    navTutorial: 'Tutorial',
 
     // Hero
     heroEyebrow: 'ONG Tecnología Andina',
@@ -30,7 +31,7 @@ const translations: Record<Lang, Record<string, string>> = {
     ctaStart: 'Empezar gratis',
     ctaWatch: 'Ver tutorial',
     ctaTitle: '¿Listo para empezar?',
-    ctaDesc: 'Únete a miles de personas de comunidades andinas que ya aprenden con Allin Yachay.',
+    ctaDesc: 'Únete a miles de personas de comunidades andinas que ya aprenden con EducAndes.',
     ctaButton: 'Crear cuenta gratis',
     ctaForums: 'Ver foros',
     freeTag: 'Gratis',
@@ -67,6 +68,7 @@ const translations: Record<Lang, Record<string, string>> = {
     lessonQuiz: 'Cuestionario',
     lessonComplete: 'Marcar como completada',
     lessonDone: '✓ Completada',
+    lessonLocked: 'Completa la clase anterior para desbloquear',
     lessonProgress: 'clases completadas',
     goForum: 'Ir al foro',
     loginToSave: 'Inicia sesión para guardar progreso',
@@ -76,6 +78,7 @@ const translations: Record<Lang, Record<string, string>> = {
     quizCorrect: '¡Correcto!',
     quizWrong: 'Incorrecto. Intenta de nuevo.',
     backToLesson: 'Volver a la clase',
+    practiceHint: 'Pista',
 
     // Metas
     metasEyebrow: 'Tu camino de aprendizaje',
@@ -89,6 +92,7 @@ const translations: Record<Lang, Record<string, string>> = {
     metasMarkSub: 'Suma cuando termines una',
     metasDailyGoal: 'Meta diaria:',
     metasFinishedBadge: '¡Terminado!',
+    metasNotStarted: 'Aún no iniciado',
     metasDaysLeft: 'Listo en',
     metasDaysSuffix: 'día',
     metasYourCourses: 'Tus cursos',
@@ -114,7 +118,7 @@ const translations: Record<Lang, Record<string, string>> = {
     forumWriteReply: 'Escribe una respuesta...',
 
     // Auth
-    authWelcome: 'Bienvenido a Allin Yachay',
+    authWelcome: 'Bienvenido a EducAndes',
     authSubtitle: 'La plataforma educativa para comunidades andinas',
     authDni: 'DNI (8 dígitos)',
     authName: 'Tu nombre completo',
@@ -130,11 +134,11 @@ const translations: Record<Lang, Record<string, string>> = {
     authContinue: 'Continuar',
 
     // Tutorial
-    tutTitle: 'Bienvenido a Allin Yachay',
+    tutTitle: 'Bienvenido a EducAndes',
     tutLangTitle: 'Elige tu idioma para continuar',
     tutLangDesc: 'Puedes cambiarlo en cualquier momento desde el menú de arriba.',
-    tutStep1Title: '¿Qué es Allin Yachay?',
-    tutStep1Desc: 'Allin Yachay es una plataforma educativa gratuita para comunidades andinas del Perú. Aquí puedes aprender sobre ganadería, cultivo, negocios y tecnología.',
+    tutStep1Title: '¿Qué es EducAndes?',
+    tutStep1Desc: 'EducAndes es una plataforma educativa gratuita para comunidades andinas del Perú. Aquí puedes aprender sobre ganadería, cultivo, negocios y tecnología.',
     tutStep2Title: '¿Cómo usar los cursos?',
     tutStep2Desc: 'Entra a "Cursos" para ver todas las materias disponibles. Cada curso tiene clases y un cuestionario para practicar lo aprendido.',
     tutStep3Title: 'Foros de comunidad',
@@ -149,6 +153,7 @@ const translations: Record<Lang, Record<string, string>> = {
     tutFinish: '¡Empezar ahora!',
     tutProgress: 'Paso',
     tutOf: 'de',
+    tutAudioHint: 'Toca el botón 🔊 junto a cualquier texto para escucharlo en voz alta.',
 
     // Chatbot
     chatTitle: 'Preguntaca Yachay',
@@ -167,11 +172,11 @@ const translations: Record<Lang, Record<string, string>> = {
     chatAnswer2: 'Los cursos tienen clases con texto y audio. Al terminar cada clase puedes hacer el cuestionario. Tu progreso se guarda automáticamente.',
     chatAnswer3: 'Los foros son espacios donde puedes hacer preguntas y compartir ideas con otros estudiantes. Cada curso tiene su propio foro.',
     chatAnswer4: 'Presiona el botón de audio (🔊) que aparece junto a los textos. Tu computadora leerá el contenido en voz alta.',
-    chatAnswer5: '¡Sí! Todos los cursos en Allin Yachay son completamente gratuitos. No necesitas pagar nada.',
+    chatAnswer5: '¡Sí! Todos los cursos en EducAndes son completamente gratuitos. No necesitas pagar nada.',
     chatUnknown: 'No entendí tu pregunta. Puedes preguntar sobre: registro, cursos, foros, audio o el costo de la plataforma.',
 
     // Why section
-    whyTitle: '¿Por qué Allin Yachay?',
+    whyTitle: '¿Por qué EducAndes?',
     why1: 'Audio en tu idioma',
     why1d: 'Quechua, Aymara, Shipibo y Español.',
     why2: 'Aprendizaje práctico',
@@ -204,6 +209,18 @@ const translations: Record<Lang, Record<string, string>> = {
     adminUsers: 'Usuarios',
     adminCourses: 'Cursos',
     adminStats: 'Estadísticas',
+
+    // 404 page
+    notFoundTitle: 'Página no encontrada',
+    notFoundDesc: 'La página que buscas no existe o fue movida.',
+    notFoundBack: 'Volver al inicio',
+
+    // Courses page
+    noCoursesFound: 'No se encontraron cursos',
+
+    // Loading / misc
+    loading: 'Cargando…',
+    courseNotFound: 'Curso no encontrado',
   },
 
   qu: {
@@ -216,6 +233,7 @@ const translations: Record<Lang, Record<string, string>> = {
     navAdmin: 'Kamachiq panel',
     navSettings: 'Churana',
     navSelectLang: 'Simi',
+    navTutorial: 'Tutorial',
 
     heroEyebrow: 'ONG Tecnología Andina',
     heroTitle: 'Yachay simiykipi, chakraykipi',
@@ -223,7 +241,7 @@ const translations: Record<Lang, Record<string, string>> = {
     ctaStart: 'Qallariy',
     ctaWatch: 'Tutorial rikuy',
     ctaTitle: 'Qallarinkichu?',
-    ctaDesc: 'Wakin runakuna Allin Yachaypi yachakuqña kanku.',
+    ctaDesc: 'Wakin runakuna EducAndespi yachakuqña kanku.',
     ctaButton: 'Cuentata paqarichiy',
     ctaForums: 'Forosman riy',
     freeTag: 'Mana qullqiy',
@@ -258,6 +276,7 @@ const translations: Record<Lang, Record<string, string>> = {
     lessonQuiz: 'Tapukuy',
     lessonComplete: 'Tukuchisqata sutichay',
     lessonDone: '✓ Tukuchisqa',
+    lessonLocked: 'Ñawpaq klase tukuchiy kicharinkipaq',
     lessonProgress: 'klase tukuchisqa',
     goForum: 'Foroman riy',
     loginToSave: 'Yaykuy avancekita waqaychankipaq',
@@ -267,6 +286,7 @@ const translations: Record<Lang, Record<string, string>> = {
     quizCorrect: '¡Allim!',
     quizWrong: 'Manan. Allin kutichita maskay.',
     backToLesson: 'Klasemantan kutiy',
+    practiceHint: 'Pista',
 
     metasEyebrow: 'Yachakuy ñanniyki',
     metasTitle: 'Chayasqaykikuna',
@@ -279,6 +299,7 @@ const translations: Record<Lang, Record<string, string>> = {
     metasMarkSub: 'Tukuchispayki yapaychiy',
     metasDailyGoal: 'Punchaw meta:',
     metasFinishedBadge: '¡Tukusqa!',
+    metasNotStarted: 'Manaraq qallarisqa',
     metasDaysLeft: 'Listo en',
     metasDaysSuffix: 'punchaw',
     metasYourCourses: 'Qampa kursukuna',
@@ -302,7 +323,7 @@ const translations: Record<Lang, Record<string, string>> = {
     forumReplies: 'kutichikuna',
     forumWriteReply: 'Kutichita qillqay...',
 
-    authWelcome: 'Allin Yachaypi Bienvenido',
+    authWelcome: 'EducAndespi Bienvenido',
     authSubtitle: 'Andin llaqtakunapaq yachakuy',
     authDni: 'DNI (8 número)',
     authName: 'Qampa sutiyki',
@@ -317,11 +338,11 @@ const translations: Record<Lang, Record<string, string>> = {
     authLangDesc: 'Yachakuq simita akllay',
     authContinue: 'Q\'apaq',
 
-    tutTitle: 'Allin Yachaypi bienvenido',
+    tutTitle: 'EducAndespi bienvenido',
     tutLangTitle: 'Simiykita akllay kuntinuanankipaq',
     tutLangDesc: 'Pachaykipi hanaq menúpi tikray atinki.',
-    tutStep1Title: '¿Imataq Allin Yachay?',
-    tutStep1Desc: 'Allin Yachay mana qullqiy yachakuy andin llaqtakunapaq. Kaypi yachankichu: uywa, tarpuy, llank\'ay, teqnulusiya.',
+    tutStep1Title: '¿Imataq EducAndes?',
+    tutStep1Desc: 'EducAndes mana qullqiy yachakuy andin llaqtakunapaq. Kaypi yachankichu: uywa, tarpuy, llank\'ay, teqnulusiya.',
     tutStep2Title: '¿Imaynatataq kursuta usay?',
     tutStep2Desc: '"Kursukuna" nichiypi tukuy kursukuna rikurinki. Sapa kursu klase tapukuyta qarin.',
     tutStep3Title: 'Llaqta foro',
@@ -336,6 +357,7 @@ const translations: Record<Lang, Record<string, string>> = {
     tutFinish: '¡Qallariy!',
     tutProgress: 'Paso',
     tutOf: 'manta',
+    tutAudioHint: 'Botón 🔊 tapiy sapa textopa kayllanpi uyarinkipaq.',
 
     chatTitle: 'Tapukuy Yachay',
     chatSubtitle: 'Yanapaq',
@@ -353,10 +375,10 @@ const translations: Record<Lang, Record<string, string>> = {
     chatAnswer2: 'Kursukuna klase tiyan texto audiowanmi. Sapa klase tukuytawan tapukuy ruwankimi. Avanceykit waqaychanki.',
     chatAnswer3: 'Forokuna kuyurichik espaciokuna tapuykunapaq wakin yachakuqkunawan. Sapa kursup kikin foron.',
     chatAnswer4: 'Audio botón (🔊) tapiy textop qayllapi. Computadorayki ñiy atinmi.',
-    chatAnswer5: '¡Arí! Allin Yachayp tukuy kursukuna mana qullqiymi.',
+    chatAnswer5: '¡Arí! EducAndesp tukuy kursukuna mana qullqiymi.',
     chatUnknown: 'Manan entiendinitsu. Tapuy atinki: reqistro, kursukuna, forokuna, audio, qullqi.',
 
-    whyTitle: '¿Imamantataq Allin Yachay?',
+    whyTitle: '¿Imamantataq EducAndes?',
     why1: 'Simiykipi uyariy',
     why1d: 'Qichwa, Aymara, Shipibo, Español.',
     why2: 'Yachakuy chacraykiwan',
@@ -385,6 +407,13 @@ const translations: Record<Lang, Record<string, string>> = {
     adminUsers: 'Runakuna',
     adminCourses: 'Kursukuna',
     adminStats: 'Estadística',
+
+    notFoundTitle: 'Mana tarikuq',
+    notFoundDesc: 'Maskasqayki paginaqa mana kanchu.',
+    notFoundBack: 'Qallariyman kutiy',
+    noCoursesFound: 'Mana kursukuna tarikurqanchu',
+    loading: 'Cargando…',
+    courseNotFound: 'Kursu mana tarikurqanchu',
   },
 
   ay: {
@@ -397,6 +426,7 @@ const translations: Record<Lang, Record<string, string>> = {
     navAdmin: 'Kamachi panel',
     navSettings: 'Churañana',
     navSelectLang: 'Aru',
+    navTutorial: 'Tutorial',
 
     heroEyebrow: 'ONG Tecnología Andina',
     heroTitle: 'Yatiqaña arumaxa, chakrämpis',
@@ -404,7 +434,7 @@ const translations: Record<Lang, Record<string, string>> = {
     ctaStart: 'Qalltaña',
     ctaWatch: 'Tutorial uñjaña',
     ctaTitle: 'Qalltañataki?',
-    ctaDesc: 'Wakinakax Allin Yachayp yatiqaskiwa.',
+    ctaDesc: 'Wakinakax EducAndesp yatiqaskiwa.',
     ctaButton: 'Cuenta lurañani',
     ctaForums: 'Foru uñjaña',
     freeTag: 'Inaki',
@@ -439,6 +469,7 @@ const translations: Record<Lang, Record<string, string>> = {
     lessonQuiz: 'Tapuqaña',
     lessonComplete: 'Tukuyatäta sutichaña',
     lessonDone: '✓ Tukuyatäta',
+    lessonLocked: 'Nayrïr klase tukuyataña kichañataki',
     lessonProgress: 'klase tukuyatäta',
     goForum: 'Foru mantaña',
     loginToSave: 'Mantaña avancexa waqaychañataki',
@@ -448,6 +479,7 @@ const translations: Record<Lang, Record<string, string>> = {
     quizCorrect: '¡Jachatäna!',
     quizWrong: 'Janiwa. Allin kutichipa maskañani.',
     backToLesson: 'Klasiru kuttaña',
+    practiceHint: 'Pista',
 
     metasEyebrow: 'Yatiqaña ñan',
     metasTitle: 'Chiqanchaptäta',
@@ -460,6 +492,7 @@ const translations: Record<Lang, Record<string, string>> = {
     metasMarkSub: 'Tukuytayna yapxataña',
     metasDailyGoal: 'Uru meta:',
     metasFinishedBadge: '¡Tukutatäta!',
+    metasNotStarted: 'Janiw qalltäkiti',
     metasDaysLeft: 'Listo en',
     metasDaysSuffix: 'uru',
     metasYourCourses: 'Qampa kursunaka',
@@ -483,7 +516,7 @@ const translations: Record<Lang, Record<string, string>> = {
     forumReplies: 'kutichañanaka',
     forumWriteReply: 'Kutichipa qillqtaña...',
 
-    authWelcome: 'Allin Yachay Bienvenido',
+    authWelcome: 'EducAndes Bienvenido',
     authSubtitle: 'Andina markänakataki yatiqaña',
     authDni: 'DNI (8 número)',
     authName: 'Qampa sutipi',
@@ -498,11 +531,11 @@ const translations: Record<Lang, Record<string, string>> = {
     authLangDesc: 'Yatiqaña aruxa akllañani',
     authContinue: 'Katxañani',
 
-    tutTitle: 'Allin Yachay Bienvenido',
+    tutTitle: 'EducAndes Bienvenido',
     tutLangTitle: 'Arumaxa akllañani kuntinuañataki',
     tutLangDesc: 'Pacänkama pataxa menúpi tikraña atisma.',
-    tutStep1Title: '¿Kunatix Allin Yachay?',
-    tutStep1Desc: 'Allin Yachay inaki yatiqaña andina markänakataki. Kaypi yatiqasma: uywa, yapu, lurawi, teqnuluxiya.',
+    tutStep1Title: '¿Kunatix EducAndes?',
+    tutStep1Desc: 'EducAndes inaki yatiqaña andina markänakataki. Kaypi yatiqasma: uywa, yapu, lurawi, teqnuluxiya.',
     tutStep2Title: '¿Kunatix kursunaka usaña?',
     tutStep2Desc: '"Kursunaka" niyantix taki kursunaka uñjasiñani. Sapa kursu klase tapuqañampi utji.',
     tutStep3Title: 'Marka foro',
@@ -517,6 +550,7 @@ const translations: Record<Lang, Record<string, string>> = {
     tutFinish: '¡Qalltañani!',
     tutProgress: 'Paso',
     tutOf: 'manta',
+    tutAudioHint: 'Botón 🔊 tukiña taki textupa qayllanpankama uyuñataki.',
 
     chatTitle: 'Tapuqaña Yachay',
     chatSubtitle: 'Yanapiri',
@@ -534,10 +568,10 @@ const translations: Record<Lang, Record<string, string>> = {
     chatAnswer2: 'Kursunaka klase utji texto audiompi. Sapa klase tukuytayna tapuqaña luraña atisma.',
     chatAnswer3: 'Forunaka espasio utji tapuqañataki wakina yatiqirinakampi. Sapa kursu saya forunipi.',
     chatAnswer4: 'Audio botón (🔊) tukiña textupa qayllankama. Computadoraxa ñiñani.',
-    chatAnswer5: '¡Jisa! Allin Yachayp taki kursunaka inakirakiwa.',
+    chatAnswer5: '¡Jisa! EducAndesp taki kursunaka inakirakiwa.',
     chatUnknown: 'Janiw entendtiti. Tapuña atisma: rejistro, kursunaka, forunaka, audiu, qullqi.',
 
-    whyTitle: '¿Kunatix Allin Yachay?',
+    whyTitle: '¿Kunatix EducAndes?',
     why1: 'Arumaxa uyuña',
     why1d: 'Qichwa, Aymara, Shipibo, Español.',
     why2: 'Yatiqaña chacränkampi',
@@ -566,6 +600,13 @@ const translations: Record<Lang, Record<string, string>> = {
     adminUsers: 'Jaqinaka',
     adminCourses: 'Kursunaka',
     adminStats: 'Estadística',
+
+    notFoundTitle: 'Janiw utjkiti',
+    notFoundDesc: 'Maskañaxa janiw utjkiti.',
+    notFoundBack: 'Qalltawiru kuttaña',
+    noCoursesFound: 'Janiw kursunakax utjkiti',
+    loading: 'Cargando…',
+    courseNotFound: 'Kursu janiw utjkiti',
   },
 
   shp: {
@@ -578,6 +619,7 @@ const translations: Record<Lang, Record<string, string>> = {
     navAdmin: 'Admin panel',
     navSettings: 'Churañana',
     navSelectLang: 'Aro',
+    navTutorial: 'Tutorial',
 
     heroEyebrow: 'ONG Tecnología Andina',
     heroTitle: 'Yoiti mia aropi, chakranx',
@@ -585,7 +627,7 @@ const translations: Record<Lang, Record<string, string>> = {
     ctaStart: 'Qalltaña',
     ctaWatch: 'Tutorial uñjaña',
     ctaTitle: 'Jakon qalltañataki?',
-    ctaDesc: 'Westiora runa Allin Yachaypi yatiqaskiraki.',
+    ctaDesc: 'Westiora runa EducAndespi yatiqaskiraki.',
     ctaButton: 'Cuenta bewakin',
     ctaForums: 'Foro uñjaña',
     freeTag: 'Yamake',
@@ -620,6 +662,7 @@ const translations: Record<Lang, Record<string, string>> = {
     lessonQuiz: 'Tapuqaña',
     lessonComplete: 'Tukuyatata sutichaña',
     lessonDone: '✓ Tukuyatata',
+    lessonLocked: 'Nayïr klase tukuyataña kichañataki',
     lessonProgress: 'klase tukuyatata',
     goForum: 'Foro mantaña',
     loginToSave: 'Mantaña avancenx waqaychañataki',
@@ -629,6 +672,7 @@ const translations: Record<Lang, Record<string, string>> = {
     quizCorrect: '¡Jakon!',
     quizWrong: 'Janiwa. Allin kutichipa maskañani.',
     backToLesson: 'Klaser kuttaña',
+    practiceHint: 'Pista',
 
     metasEyebrow: 'Yoiti ñan',
     metasTitle: 'Chiqantama',
@@ -641,6 +685,7 @@ const translations: Record<Lang, Record<string, string>> = {
     metasMarkSub: 'Tukuytayana yapxataña',
     metasDailyGoal: 'Metax uru:',
     metasFinishedBadge: '¡Tukutatata!',
+    metasNotStarted: 'Janiw qalltäkiti',
     metasDaysLeft: 'Listo en',
     metasDaysSuffix: 'uru',
     metasYourCourses: 'Mia kursokuna',
@@ -664,7 +709,7 @@ const translations: Record<Lang, Record<string, string>> = {
     forumReplies: 'kutichañanaka',
     forumWriteReply: 'Kutichipa qillqtaña...',
 
-    authWelcome: 'Allin Yachay Bienvenido',
+    authWelcome: 'EducAndes Bienvenido',
     authSubtitle: 'Andina jemakataki yoiti',
     authDni: 'DNI (8 número)',
     authName: 'Mia sutipi',
@@ -679,11 +724,11 @@ const translations: Record<Lang, Record<string, string>> = {
     authLangDesc: 'Yoiti arox akllañani',
     authContinue: 'Katxañani',
 
-    tutTitle: 'Allin Yachay Bienvenido',
+    tutTitle: 'EducAndes Bienvenido',
     tutLangTitle: 'Arox akllañani kuntinuañataki',
     tutLangDesc: 'Pacänkama pataxa menúpi tikraña atisma.',
-    tutStep1Title: '¿Jawera Allin Yachay?',
-    tutStep1Desc: 'Allin Yachay yamake yoiti andina jemakataki. Kaypi yoitisma: uywa, yapu, lurawi, teqnoloxia.',
+    tutStep1Title: '¿Jawera EducAndes?',
+    tutStep1Desc: 'EducAndes yamake yoiti andina jemakataki. Kaypi yoitisma: uywa, yapu, lurawi, teqnoloxia.',
     tutStep2Title: '¿Jawera kursokuna usaña?',
     tutStep2Desc: '"Kursokuna" niyantix taki kursokuna uñjasiñani. Sapa kurso klase tapuqañampi utji.',
     tutStep3Title: 'Jema foro',
@@ -698,6 +743,7 @@ const translations: Record<Lang, Record<string, string>> = {
     tutFinish: '¡Qalltañani!',
     tutProgress: 'Paso',
     tutOf: 'manta',
+    tutAudioHint: 'Botón 🔊 tukiña taki textux qayllankama uyuñataki.',
 
     chatTitle: 'Tapuqaña Yachay',
     chatSubtitle: 'Yanapiri',
@@ -715,10 +761,10 @@ const translations: Record<Lang, Record<string, string>> = {
     chatAnswer2: 'Kursokuna klase utji texto audiompi. Sapa klase tukuytayna tapuqaña luraña atisma.',
     chatAnswer3: 'Forokuna espasio utji tapuqañataki wakina yoitirinakompi. Sapa kurso saya forunipi.',
     chatAnswer4: 'Audio botón (🔊) tukiña textupa qayllankama. Computadoraxa ñiñani.',
-    chatAnswer5: '¡Jisa! Allin Yachayp taki kursokuna yamakeki.',
+    chatAnswer5: '¡Jisa! EducAndesp taki kursokuna yamakeki.',
     chatUnknown: 'Janiw entendtiti. Tapuña atisma: rejistro, kursokuna, forokuna, audiu, qullqi.',
 
-    whyTitle: '¿Jaweratax Allin Yachay?',
+    whyTitle: '¿Jaweratax EducAndes?',
     why1: 'Mia arux uyuña',
     why1d: 'Qichwa, Aymara, Shipibo, Español.',
     why2: 'Yoiti chacranx',
@@ -747,6 +793,13 @@ const translations: Record<Lang, Record<string, string>> = {
     adminUsers: 'Jakinaka',
     adminCourses: 'Kursokuna',
     adminStats: 'Estadística',
+
+    notFoundTitle: 'Janiw utjkiti',
+    notFoundDesc: 'Maskañaxa janiw utjkiti.',
+    notFoundBack: 'Qalltawir kuttaña',
+    noCoursesFound: 'Janiw kursokunaxa utjkiti',
+    loading: 'Cargando…',
+    courseNotFound: 'Kurso janiw utjkiti',
   },
 };
 

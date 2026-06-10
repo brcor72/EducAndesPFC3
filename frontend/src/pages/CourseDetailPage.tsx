@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, CheckCircle2, BookOpen, MessageSquare, ClipboardList, Play } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, BookOpen, MessageSquare, ClipboardList, Play, Lock } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { SiteHeader } from '../components/layout/SiteHeader';
@@ -52,8 +52,8 @@ export default function CourseDetailPage() {
     },
   });
 
-  if (isLoading) return <div className="flex min-h-screen items-center justify-center"><div className="text-muted-foreground animate-pulse">Cargando…</div></div>;
-  if (!course) return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Curso no encontrado</div>;
+  if (isLoading) return <div className="flex min-h-screen items-center justify-center"><div className="text-muted-foreground animate-pulse">{tr('loading')}</div></div>;
+  if (!course) return <div className="flex min-h-screen items-center justify-center text-muted-foreground">{tr('courseNotFound')}</div>;
 
   const lessons = course.lessons || [];
   const pct = lessons.length > 0 ? Math.round((lessonsDone / lessons.length) * 100) : 0;
@@ -92,10 +92,18 @@ export default function CourseDetailPage() {
               <SpeakButton text={activeLesson.title + '. ' + activeLesson.detail} size="md" className="shrink-0 mt-1" />
             </div>
 
-            <p className="text-muted-foreground text-sm">{activeLesson.summary}</p>
+            <div className="flex items-center gap-2">
+              <p className="text-muted-foreground text-sm flex-1">{activeLesson.summary}</p>
+              <SpeakButton text={activeLesson.summary} size="sm" />
+            </div>
 
-            <div className="prose prose-sm max-w-none text-foreground/90 leading-relaxed">
-              {activeLesson.detail}
+            <div className="rounded-2xl bg-muted/40 p-4 space-y-2">
+              <div className="flex items-start gap-2">
+                <div className="prose prose-sm max-w-none text-foreground/90 leading-relaxed flex-1 whitespace-pre-line">
+                  {activeLesson.detail}
+                </div>
+                <SpeakButton text={activeLesson.detail} size="md" className="shrink-0 mt-1" />
+              </div>
             </div>
 
             {activeLesson.isPractice && activeLesson.practiceTitle && (
@@ -106,7 +114,7 @@ export default function CourseDetailPage() {
                 </div>
                 <p className="mt-2 text-sm">{activeLesson.practiceScenario}</p>
                 {activeLesson.practiceHint && (
-                  <p className="mt-2 text-xs text-muted-foreground">💡 Pista: {activeLesson.practiceHint}</p>
+                  <p className="mt-2 text-xs text-muted-foreground">💡 {tr('practiceHint')}: {activeLesson.practiceHint}</p>
                 )}
               </div>
             )}
@@ -205,6 +213,7 @@ export default function CourseDetailPage() {
                           <span className="flex-1">{opt}</span>
                           {isCorrect && <span className="text-puna">✓</span>}
                           {isWrong && <span className="text-destructive">✗</span>}
+                          <SpeakButton text={opt} size="sm" />
                         </button>
                       );
                     })}
@@ -283,36 +292,60 @@ export default function CourseDetailPage() {
         <div className="space-y-3">
           {lessons.map((lesson: any) => {
             const isCompleted = lesson.index <= lessonsDone;
+            // Lección disponible si es la primera O si la anterior ya fue completada
+            const isAvailable = lesson.index === 1 || lesson.index <= lessonsDone + 1;
+            const isLocked = !isAvailable;
             return (
-              <div key={lesson.id} className="rounded-3xl border-2 border-border bg-card shadow-soft overflow-hidden">
+              <div
+                key={lesson.id}
+                className={`rounded-3xl border-2 shadow-soft overflow-hidden transition-all ${
+                  isLocked
+                    ? 'border-border/40 bg-muted/30 opacity-60'
+                    : isCompleted
+                      ? 'border-primary/40 bg-card'
+                      : 'border-border bg-card'
+                }`}
+              >
                 <div className="flex w-full items-center gap-4 p-5">
-                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${isCompleted ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
-                    {isCompleted ? <CheckCircle2 className="h-5 w-5" /> : <BookOpen className="h-5 w-5" />}
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${
+                    isLocked ? 'bg-muted text-muted-foreground' :
+                    isCompleted ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                  }`}>
+                    {isLocked ? <Lock className="h-5 w-5" /> : isCompleted ? <CheckCircle2 className="h-5 w-5" /> : <BookOpen className="h-5 w-5" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <div className="font-display text-lg font-bold truncate">{lesson.title}</div>
-                      <SpeakButton text={lesson.title + '. ' + lesson.summary} />
+                      <div className={`font-display text-lg font-bold truncate ${isLocked ? 'text-muted-foreground' : ''}`}>
+                        {lesson.index}. {lesson.title}
+                      </div>
+                      {!isLocked && <SpeakButton text={lesson.title + '. ' + lesson.summary} />}
                     </div>
                     <div className="text-sm text-muted-foreground truncate">{lesson.summary}</div>
-                  </div>
-                  {/* Two action buttons */}
-                  <div className="flex shrink-0 gap-2">
-                    <button
-                      onClick={() => openLesson(lesson, 'topic')}
-                      className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground shadow-warm hover:bg-primary/90 transition-colors"
-                    >
-                      <Play className="h-3.5 w-3.5" /> {tr('lessonDo')}
-                    </button>
-                    {lesson.quizQuestions?.length > 0 && (
-                      <button
-                        onClick={() => openLesson(lesson, 'quiz')}
-                        className="flex items-center gap-1.5 rounded-xl border-2 border-border px-3 py-2 text-xs font-bold hover:bg-muted transition-colors"
-                      >
-                        <ClipboardList className="h-3.5 w-3.5" /> {tr('lessonQuiz')}
-                      </button>
+                    {isLocked && (
+                      <div className="mt-1 text-xs font-bold text-muted-foreground">
+                        🔒 {tr('lessonLocked')}
+                      </div>
                     )}
                   </div>
+                  {/* Botones de acción — solo si disponible */}
+                  {!isLocked && (
+                    <div className="flex shrink-0 gap-2">
+                      <button
+                        onClick={() => openLesson(lesson, 'topic')}
+                        className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground shadow-warm hover:bg-primary/90 transition-colors"
+                      >
+                        <Play className="h-3.5 w-3.5" /> {tr('lessonDo')}
+                      </button>
+                      {isCompleted && lesson.quizQuestions?.length > 0 && (
+                        <button
+                          onClick={() => openLesson(lesson, 'quiz')}
+                          className="flex items-center gap-1.5 rounded-xl border-2 border-border px-3 py-2 text-xs font-bold hover:bg-muted transition-colors"
+                        >
+                          <ClipboardList className="h-3.5 w-3.5" /> {tr('lessonQuiz')}
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             );

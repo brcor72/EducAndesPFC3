@@ -1,6 +1,7 @@
 import { Volume2, VolumeX } from 'lucide-react';
 import { useState } from 'react';
 import { useSpeech } from '../../hooks/useSpeech';
+import { useI18nStore } from '../../store/i18n.store';
 
 interface Props {
   text: string;
@@ -8,8 +9,16 @@ interface Props {
   className?: string;
 }
 
+const LANG_TO_BCP: Record<string, string> = {
+  es: 'es-PE',
+  qu: 'es-PE',
+  ay: 'es-PE',
+  shp: 'es-PE',
+};
+
 export function SpeakButton({ text, size = 'sm', className = '' }: Props) {
   const { speak, stop, isSupported } = useSpeech();
+  const { lang } = useI18nStore();
   const [speaking, setSpeaking] = useState(false);
 
   if (!isSupported) return null;
@@ -22,8 +31,9 @@ export function SpeakButton({ text, size = 'sm', className = '' }: Props) {
     } else {
       setSpeaking(true);
       const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = 'es-PE';
-      utter.rate = 0.85;
+      const bcpLang = LANG_TO_BCP[lang] ?? 'es-PE';
+      utter.lang = bcpLang;
+      utter.rate = 0.82;
       const voices = window.speechSynthesis.getVoices();
       const pref = voices.find((v) => v.lang.startsWith('es')) ?? null;
       if (pref) utter.voice = pref;
@@ -42,7 +52,7 @@ export function SpeakButton({ text, size = 'sm', className = '' }: Props) {
     <button
       onClick={handleClick}
       title={speaking ? 'Detener audio' : 'Escuchar en voz alta'}
-      className={`inline-flex items-center justify-center rounded-full border-2 transition-colors ${
+      className={`inline-flex shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
         speaking
           ? 'border-primary bg-primary text-primary-foreground'
           : 'border-border bg-card text-muted-foreground hover:border-primary hover:text-primary'

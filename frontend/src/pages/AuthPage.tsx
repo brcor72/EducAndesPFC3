@@ -4,6 +4,7 @@ import { Mountain, Eye, EyeOff, Check, AlertCircle, Sparkles } from 'lucide-reac
 import { toast } from 'sonner';
 import { useAuthStore } from '../store/auth.store';
 import { useI18nStore, type Lang, LANG_NAMES } from '../store/i18n.store';
+import { useTutorialStore } from '../store/tutorial.store';
 import { SpeakButton } from '../components/audio/SpeakButton';
 
 const LANG_GREETINGS: Record<Lang, string> = {
@@ -26,6 +27,7 @@ export default function AuthPage() {
   const navigate = useNavigate();
   const { user, login, register, loading } = useAuthStore();
   const { lang, setLang, tr } = useI18nStore();
+  const { openTutorial } = useTutorialStore();
   const [stage, setStage] = useState<'lang' | 'form'>(() =>
     localStorage.getItem('educandes-lang') ? 'form' : 'lang'
   );
@@ -63,9 +65,12 @@ export default function AuthPage() {
       if (mode === 'up') {
         await register({ dni, displayName, community: community || undefined, password, preferredLang: lang });
         toast.success(tr('authWelcome'));
+        localStorage.removeItem('educandes-tutorial-done');
+        openTutorial();
       } else {
         await login(dni, password);
         toast.success(tr('authWelcome'));
+        openTutorial();
       }
       navigate('/metas');
     } catch (err: any) {
@@ -90,7 +95,7 @@ export default function AuthPage() {
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-sunrise shadow-warm">
             <Mountain className="h-6 w-6 text-primary-foreground" />
           </div>
-          <div className="font-display text-2xl font-bold">Allin Yachay</div>
+          <div className="font-display text-2xl font-bold">EducAndes</div>
         </Link>
 
         {stage === 'lang' ? (

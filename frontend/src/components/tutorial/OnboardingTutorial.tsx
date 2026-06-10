@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, ArrowRight, ArrowLeft, BookOpen, MessageSquare, Target, Sun, Volume2 } from 'lucide-react';
 import { useI18nStore, type Lang, LANG_NAMES } from '../../store/i18n.store';
+import { useTutorialStore } from '../../store/tutorial.store';
 import { SpeakButton } from '../audio/SpeakButton';
 
 const STORAGE_KEY = 'educandes-tutorial-done';
@@ -52,6 +53,7 @@ const LANG_FLAGS: Record<Lang, string> = {
 
 export function OnboardingTutorial() {
   const { lang, setLang, tr } = useI18nStore();
+  const { open: storeOpen, closeTutorial } = useTutorialStore();
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState(-1); // -1 = language selection
 
@@ -60,9 +62,17 @@ export function OnboardingTutorial() {
     if (!done) setVisible(true);
   }, []);
 
+  useEffect(() => {
+    if (storeOpen) {
+      setVisible(true);
+      setStep(-1);
+    }
+  }, [storeOpen]);
+
   const finish = () => {
     localStorage.setItem(STORAGE_KEY, '1');
     setVisible(false);
+    closeTutorial();
   };
 
   if (!visible) return null;
@@ -89,7 +99,7 @@ export function OnboardingTutorial() {
               </div>
               <div>
                 <div className="font-display text-2xl font-bold">{tr('tutTitle')}</div>
-                <div className="text-sm text-muted-foreground">Allin Yachay</div>
+                <div className="text-sm text-muted-foreground">EducAndes</div>
               </div>
             </div>
 
@@ -188,7 +198,7 @@ export function OnboardingTutorial() {
               {step === STEPS.length - 1 && (
                 <div className="flex items-center gap-3 rounded-2xl bg-sun/20 border-2 border-sun/40 p-3 text-sm">
                   <Volume2 className="h-5 w-5 shrink-0 text-primary" />
-                  <span>Toca el botón <strong>🔊</strong> junto a cualquier texto para escucharlo en voz alta.</span>
+                  <span>{tr('tutAudioHint')}</span>
                 </div>
               )}
 

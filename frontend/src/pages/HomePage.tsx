@@ -66,9 +66,12 @@ export default function HomePage() {
           <div className="relative">
             <div className="absolute -inset-4 rounded-[2rem] bg-gradient-sunrise opacity-30 blur-2xl" />
             <div className="relative overflow-hidden rounded-[2rem] border-4 border-card shadow-warm">
-              <img
-                src="https://images.unsplash.com/photo-1541971875076-8f970d573be6?w=800&q=80"
-                alt="Comunidad andina aprendiendo tecnología"
+              <video
+                src="/video_portada.mp4"
+                autoPlay
+                loop
+                muted
+                playsInline
                 className="h-full w-full object-cover aspect-[4/3]"
               />
             </div>
@@ -228,7 +231,7 @@ export default function HomePage() {
         <AndeanBorder />
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 px-6 py-8 text-center text-sm text-muted-foreground">
           <div className="flex items-center gap-2 font-display text-base text-foreground">
-            <Sun className="h-5 w-5 text-primary" /> Allin Yachay — EducAndes
+            <Sun className="h-5 w-5 text-primary" /> EducAndes — EducAndes
           </div>
           <div className="flex items-center gap-2">
             <p>{tr('footerNote')}</p>

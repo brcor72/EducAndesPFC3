@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Sun, Menu, X, Bell, User, LogOut, LayoutDashboard } from 'lucide-react';
+import { Sun, Menu, X, Bell, User, LogOut, LayoutDashboard, PlayCircle } from 'lucide-react';
 import { useAuthStore } from '../../store/auth.store';
 import { useI18nStore, type Lang, LANG_NAMES } from '../../store/i18n.store';
+import { useTutorialStore } from '../../store/tutorial.store';
 import { toast } from 'sonner';
 
 const LANGS: { code: Lang }[] = [
@@ -16,6 +17,7 @@ export function SiteHeader() {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const { lang, setLang, tr } = useI18nStore();
+  const { openTutorial } = useTutorialStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
@@ -33,7 +35,7 @@ export function SiteHeader() {
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-sunrise shadow-warm">
             <Sun className="h-5 w-5 text-primary-foreground" />
           </div>
-          <span className="font-display text-xl font-bold">Allin Yachay</span>
+          <span className="font-display text-xl font-bold">EducAndes</span>
         </Link>
 
         {/* Desktop nav */}
@@ -49,6 +51,13 @@ export function SiteHeader() {
               {tr('navMetas')}
             </Link>
           )}
+          <button
+            onClick={openTutorial}
+            className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-bold text-primary hover:bg-primary/10 transition-colors border-2 border-primary/30"
+          >
+            <PlayCircle className="h-4 w-4" />
+            {tr('navTutorial')}
+          </button>
         </nav>
 
         {/* Right side */}
@@ -140,6 +149,13 @@ export function SiteHeader() {
             <Link to="/cursos" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2 font-bold hover:bg-muted">{tr('navCourses')}</Link>
             <Link to="/foros" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2 font-bold hover:bg-muted">{tr('navForums')}</Link>
             {user && <Link to="/metas" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2 font-bold hover:bg-muted">{tr('navMetas')}</Link>}
+            <button
+              onClick={() => { openTutorial(); setMenuOpen(false); }}
+              className="flex items-center gap-1.5 rounded-xl px-3 py-2 font-bold text-primary hover:bg-primary/10"
+            >
+              <PlayCircle className="h-4 w-4" />
+              {tr('navTutorial')}
+            </button>
             <div className="mt-2 flex flex-wrap gap-1">
               {LANGS.map((l) => (
                 <button
