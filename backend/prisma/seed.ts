@@ -20,13 +20,13 @@ const COURSES = [
     imageUrl: '/courses/Imagenes_pfc3/curso1.png',
     lessons: [
       {
-        title: 'Por qué criar cuyes y gallinas en casa',
+        title: 'Bienvenida',
         summary: 'Cómo la crianza familiar mejora la alimentación y el ingreso.',
-        detail: 'Con solo 10 cuyes o 5 gallinas puedes generar ingresos extras sin necesitar mucho espacio ni dinero. Muchas familias de la sierra ya lo hacen: venden carne de cuy los fines de semana en la feria o entregan huevos a vecinos cada semana.\n\nLos cuyes pesan entre 800 g y 1 kg al llegar a la edad de venta (3 meses). Una hembra puede tener hasta 4 partos al año con 2 a 4 crías cada vez. Las gallinas ponedoras producen entre 4 y 5 huevos por semana si están bien alimentadas.\n\nNo necesitas mucho espacio: un cuarto de 3×2 metros alcanza para empezar con 20 cuyes. Puedes usar materiales que ya tienes: tablas viejas, mallas de alambre, costales de yute.',
+        detail: 'Vemos ejemplos reales de familias que generan ingresos extras con 10 cuyes o 5 gallinas. No necesitas mucho espacio ni dinero para empezar. Una familia con 10 cuyes puede obtener entre S/ 80 y S/ 150 mensuales vendiendo crías y animales listos. Las gallinas además producen huevos diariamente sin casi costo adicional.',
         quiz: [
-          { q: '¿Cuánto puede pesar un cuy listo para la venta?', opts: ['Entre 800 g y 1 kg', 'Más de 3 kg', 'Menos de 200 g', '2 kg exactos'], ans: 0 },
-          { q: '¿Cuántos partos puede tener una cuy hembra al año?', opts: ['Hasta 4 partos', 'Solo 1 parto', 'Más de 10 partos', 'Ninguno'], ans: 0 },
-          { q: '¿Cuántos huevos produce una gallina bien alimentada por semana?', opts: ['Entre 4 y 5 huevos', 'Más de 20 huevos', 'Solo 1 huevo', '10 huevos'], ans: 0 },
+          { q: '¿Con cuántos cuyes puede generar ingresos extras una familia?', opts: ['Con 10 cuyes', 'Con 100 cuyes', 'Con 1 solo cuy', 'Con 50 cuyes'], ans: 0 },
+          { q: '¿Qué producen las gallinas además de carne?', opts: ['Huevos', 'Lana', 'Leche', 'Madera'], ans: 0 },
+          { q: '¿Se necesita mucho espacio para empezar la crianza?', opts: ['No, puedes empezar con poco espacio', 'Sí, necesitas una hectárea', 'Solo en zonas urbanas', 'Siempre se necesita galpón grande'], ans: 0 },
         ],
       },
       {
@@ -587,7 +587,7 @@ const COURSES = [
     slug: 'ganaderia', title: 'Ganadería inteligente',
     short: 'Registra llamas y alpacas en tu celular: salud, vacunas, crías y peso.',
     long: 'Aprende a llevar un cuaderno digital de tu rebaño con registros de peso, alimentación, salud y reproducción para aumentar la productividad.',
-    level: 'INICIAL' as const, durationWeeks: 4, category: 'CAMPO' as const,
+    level: 'INICIAL' as const, durationWeeks: 6, category: 'CAMPO' as const,
     iconName: 'Tractor', isPublished: true, sortOrder: 5,
     imageUrl: '/courses/ganaderia.png',
     lessons: [
