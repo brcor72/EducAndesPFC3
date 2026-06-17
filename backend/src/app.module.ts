@@ -12,6 +12,7 @@ import { ForumsModule } from './modules/forums/forums.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { AuditModule } from './modules/audit/audit.module';
+import { AiModule } from './modules/ai/ai.module';
 
 @Module({
   imports: [
@@ -28,6 +29,8 @@ import { AuditModule } from './modules/audit/audit.module';
     NotificationsModule,
     DashboardModule,
     AuditModule,
+    AiModule,
   ],
 })
 export class AppModule {}
+

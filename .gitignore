@@ -32,3 +32,9 @@ Thumbs.db
 
 # Temp
 setup-db.ps1
+
+# Playwright
+playwright-report/
+test-results/
+**/playwright-report/
+**/test-results/

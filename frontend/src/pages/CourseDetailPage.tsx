@@ -9,6 +9,7 @@ import { coursesService, progressService } from '../services/courses.service';
 import { useAuthStore } from '../store/auth.store';
 import { useI18nStore } from '../store/i18n.store';
 import { SpeakButton } from '../components/audio/SpeakButton';
+import { PracticePanel } from '../components/practice/PracticePanel';
 
 type LessonView = 'list' | 'topic' | 'quiz';
 
@@ -22,6 +23,8 @@ export default function CourseDetailPage() {
   const [lessonView, setLessonView] = useState<LessonView>('list');
   const [quizAnswers, setQuizAnswers] = useState<Record<string, number | null>>({});
   const [quizResults, setQuizResults] = useState<Record<string, boolean>>({});
+  const [isPracticeOpen, setIsPracticeOpen] = useState(false);
+
 
   const { data: course, isLoading } = useQuery({
     queryKey: ['course', courseId],
@@ -107,14 +110,26 @@ export default function CourseDetailPage() {
             </div>
 
             {activeLesson.isPractice && activeLesson.practiceTitle && (
-              <div className="rounded-2xl border-2 border-primary/30 bg-primary/5 p-5">
+              <div className="rounded-2xl border-2 border-primary/30 bg-primary/5 p-5 space-y-4">
                 <div className="flex items-center gap-2 font-bold text-primary">
                   <span>💡</span> {activeLesson.practiceTitle}
                   <SpeakButton text={activeLesson.practiceTitle + '. ' + activeLesson.practiceScenario} />
                 </div>
-                <p className="mt-2 text-sm">{activeLesson.practiceScenario}</p>
+                <p className="text-sm">{activeLesson.practiceScenario}</p>
                 {activeLesson.practiceHint && (
-                  <p className="mt-2 text-xs text-muted-foreground">💡 {tr('practiceHint')}: {activeLesson.practiceHint}</p>
+                  <p className="text-xs text-muted-foreground">💡 {tr('practiceHint')}: {activeLesson.practiceHint}</p>
+                )}
+                {user ? (
+                  <button
+                    onClick={() => setIsPracticeOpen(true)}
+                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 font-bold text-primary-foreground hover:bg-primary/90 shadow-warm transition-all"
+                  >
+                    💬 Resolver caso con Yachaq (IA)
+                  </button>
+                ) : (
+                  <p className="text-xs font-bold text-destructive/85">
+                    ⚠️ Inicia sesión para resolver este caso con el tutor de IA.
+                  </p>
                 )}
               </div>
             )}
@@ -152,6 +167,17 @@ export default function CourseDetailPage() {
             </div>
           </div>
         </div>
+        {isPracticeOpen && (
+          <PracticePanel
+            lesson={activeLesson}
+            onClose={() => setIsPracticeOpen(false)}
+            onComplete={() => {
+              if (activeLesson.index > lessonsDone) {
+                updateProgressMutation.mutate(activeLesson.index);
+              }
+            }}
+          />
+        )}
       </div>
     );
   }
