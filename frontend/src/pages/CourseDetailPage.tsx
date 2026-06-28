@@ -1,6 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, CheckCircle2, BookOpen, MessageSquare, ClipboardList, Play, Lock } from 'lucide-react';
+import {
+  ArrowLeft, ArrowRight, CheckCircle2, BookOpen,
+  MessageSquare, ClipboardList, Play, Lock, RotateCcw, Trophy,
+} from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { SiteHeader } from '../components/layout/SiteHeader';
@@ -9,6 +12,7 @@ import { coursesService, progressService } from '../services/courses.service';
 import { useAuthStore } from '../store/auth.store';
 import { useI18nStore } from '../store/i18n.store';
 import { SpeakButton } from '../components/audio/SpeakButton';
+import { VirtualTutor } from '../components/tutor/VirtualTutor';
 
 type LessonView = 'list' | 'topic' | 'quiz';
 
@@ -18,10 +22,11 @@ export default function CourseDetailPage() {
   const { tr } = useI18nStore();
   const qc = useQueryClient();
 
-  const [activeLesson, setActiveLesson] = useState<any>(null);
-  const [lessonView, setLessonView] = useState<LessonView>('list');
-  const [quizAnswers, setQuizAnswers] = useState<Record<string, number | null>>({});
-  const [quizResults, setQuizResults] = useState<Record<string, boolean>>({});
+  const [activeLesson, setActiveLesson]   = useState<any>(null);
+  const [lessonView, setLessonView]       = useState<LessonView>('list');
+  const [quizAnswers, setQuizAnswers]     = useState<Record<string, number | null>>({});
+  const [quizResults, setQuizResults]     = useState<Record<string, boolean>>({});
+  const completionFiredRef                = useRef(false);
 
   const { data: course, isLoading } = useQuery({
     queryKey: ['course', courseId],
@@ -34,12 +39,12 @@ export default function CourseDetailPage() {
     enabled: !!user,
   });
 
-  const progressRow = progress?.rows?.find((r: any) => r.course?.slug === courseId || r.courseId === course?.id);
-  const lessonsDone = progressRow?.lessonsDone ?? 0;
+  const progressRow  = progress?.rows?.find((r: any) => r.course?.slug === courseId || r.courseId === course?.id);
+  const lessonsDone  = progressRow?.lessonsDone ?? 0;
 
   const updateProgressMutation = useMutation({
     mutationFn: (done: number) => progressService.updateProgress(courseId!, done),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['progress'] }); toast.success(tr('lessonDone')); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['progress'] }); },
   });
 
   const submitQuizMutation = useMutation({
@@ -47,22 +52,43 @@ export default function CourseDetailPage() {
       coursesService.submitQuiz(courseId!, 'lesson', questionId, selectedAnswer),
     onSuccess: (result, { questionId }) => {
       setQuizResults((prev) => ({ ...prev, [questionId]: result.isCorrect }));
-      if (result.isCorrect) toast.success(tr('quizCorrect'));
-      else toast.error(tr('quizWrong'));
     },
   });
 
+  // ── Quiz state computations ────────────────────────────────
+  const quizQuestions  = activeLesson?.quizQuestions ?? [];
+  const quizAllDone    = quizQuestions.length > 0 &&
+    quizQuestions.every((q: any) => quizResults[q.id] !== undefined);
+  const quizAllCorrect = quizAllDone &&
+    quizQuestions.every((q: any) => quizResults[q.id] === true);
+  const quizHasErrors  = quizAllDone && !quizAllCorrect;
+
+  // Auto-mark lesson complete when quiz is fully passed
+  useEffect(() => {
+    if (
+      quizAllCorrect &&
+      activeLesson &&
+      activeLesson.index > lessonsDone &&
+      !completionFiredRef.current &&
+      !updateProgressMutation.isPending
+    ) {
+      completionFiredRef.current = true;
+      updateProgressMutation.mutate(activeLesson.index);
+    }
+  }, [quizAllCorrect, activeLesson?.index, lessonsDone]);
+
   if (isLoading) return <div className="flex min-h-screen items-center justify-center"><div className="text-muted-foreground animate-pulse">{tr('loading')}</div></div>;
-  if (!course) return <div className="flex min-h-screen items-center justify-center text-muted-foreground">{tr('courseNotFound')}</div>;
+  if (!course)   return <div className="flex min-h-screen items-center justify-center text-muted-foreground">{tr('courseNotFound')}</div>;
 
   const lessons = course.lessons || [];
-  const pct = lessons.length > 0 ? Math.round((lessonsDone / lessons.length) * 100) : 0;
+  const pct     = lessons.length > 0 ? Math.round((lessonsDone / lessons.length) * 100) : 0;
 
   const openLesson = (lesson: any, view: LessonView) => {
     setActiveLesson(lesson);
     setLessonView(view);
     setQuizAnswers({});
     setQuizResults({});
+    completionFiredRef.current = false;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -71,8 +97,54 @@ export default function CourseDetailPage() {
     setLessonView('list');
   };
 
-  // === TOPIC VIEW ===
+  // Advance to next lesson after completing current
+  const goToNextLesson = () => {
+    const next = lessons.find((l: any) => l.index === activeLesson.index + 1);
+    if (next) {
+      openLesson(next, 'topic');
+    } else {
+      toast.success('¡Felicitaciones! Completaste todo el curso 🎉');
+      backToList();
+    }
+  };
+
+  // Complete a lesson that has no quiz and go next
+  const completeNoQuizLesson = () => {
+    if (activeLesson.index > lessonsDone) {
+      updateProgressMutation.mutate(activeLesson.index, {
+        onSuccess: () => {
+          toast.success(tr('lessonDone'));
+          goToNextLesson();
+        },
+      });
+    } else {
+      goToNextLesson();
+    }
+  };
+
+  // Retry quiz: reset only wrong answers
+  const retryQuiz = () => {
+    const resetAnswers: Record<string, number | null> = {};
+    const resetResults: Record<string, boolean>       = {};
+    quizQuestions.forEach((q: any) => {
+      if (quizResults[q.id] === true) {
+        // Keep correct answers locked
+        resetAnswers[q.id] = quizAnswers[q.id];
+        resetResults[q.id] = true;
+      }
+    });
+    setQuizAnswers(resetAnswers);
+    setQuizResults(resetResults);
+    completionFiredRef.current = false;
+  };
+
+  // ══════════════════════════════════════════════════════════
+  // TOPIC VIEW
+  // ══════════════════════════════════════════════════════════
   if (lessonView === 'topic' && activeLesson) {
+    const hasQuiz      = (activeLesson.quizQuestions?.length ?? 0) > 0;
+    const alreadyDone  = activeLesson.index <= lessonsDone;
+
     return (
       <div className="min-h-screen bg-background text-foreground">
         <SiteHeader />
@@ -119,21 +191,10 @@ export default function CourseDetailPage() {
               </div>
             )}
 
-            {user && (
-              <div className="flex items-center justify-between rounded-2xl bg-muted/60 p-4">
-                <span className="text-sm font-bold">{tr('lessonComplete')}?</span>
-                <button
-                  onClick={() => {
-                    const isCompleted = activeLesson.index <= lessonsDone;
-                    updateProgressMutation.mutate(isCompleted ? activeLesson.index - 1 : activeLesson.index);
-                  }}
-                  className={`rounded-xl px-4 py-2 text-sm font-bold transition-colors ${
-                    activeLesson.index <= lessonsDone
-                      ? 'bg-primary/20 text-primary hover:bg-primary/30'
-                      : 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-warm'
-                  }`}>
-                  {activeLesson.index <= lessonsDone ? tr('lessonDone') : tr('lessonComplete')}
-                </button>
+            {/* ── Lección ya completada ── */}
+            {alreadyDone && (
+              <div className="flex items-center gap-2 rounded-2xl bg-primary/10 px-4 py-3 text-sm font-bold text-primary">
+                <CheckCircle2 className="h-4 w-4" /> Clase completada
               </div>
             )}
 
@@ -141,23 +202,54 @@ export default function CourseDetailPage() {
               <button onClick={backToList} className="flex items-center gap-2 rounded-2xl border-2 border-border px-4 py-3 font-bold hover:bg-muted transition-colors">
                 <ArrowLeft className="h-4 w-4" /> {tr('backToLesson')}
               </button>
-              {activeLesson.quizQuestions?.length > 0 && (
+
+              {hasQuiz ? (
+                /* Con cuestionario: ir al quiz (el quiz es lo que completa la lección) */
                 <button
                   onClick={() => setLessonView('quiz')}
                   className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3 font-bold text-primary-foreground shadow-warm hover:bg-primary/90 transition-colors"
                 >
-                  <ClipboardList className="h-4 w-4" /> {tr('lessonQuiz')}
+                  <ClipboardList className="h-4 w-4" />
+                  {alreadyDone ? 'Repasar cuestionario' : 'Ir al cuestionario →'}
                 </button>
-              )}
+              ) : user ? (
+                /* Sin cuestionario: botón completar clase */
+                <button
+                  onClick={completeNoQuizLesson}
+                  disabled={updateProgressMutation.isPending}
+                  className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3 font-bold text-primary-foreground shadow-warm hover:bg-primary/90 disabled:opacity-50 transition-colors"
+                >
+                  {alreadyDone
+                    ? <><ArrowRight className="h-4 w-4" /> Siguiente clase</>
+                    : <><CheckCircle2 className="h-4 w-4" /> Completar y continuar</>
+                  }
+                </button>
+              ) : null}
             </div>
           </div>
+
+          <VirtualTutor
+            mode="lesson"
+            courseTitle={course.title}
+            courseSlug={courseId!}
+            lessonTitle={activeLesson.title}
+            lessonSummary={activeLesson.summary || ''}
+            lessonDetail={activeLesson.detail || ''}
+            lessonIndex={activeLesson.index}
+            totalLessons={lessons.length}
+            lessonsDone={lessonsDone}
+          />
         </div>
       </div>
     );
   }
 
-  // === QUIZ VIEW ===
+  // ══════════════════════════════════════════════════════════
+  // QUIZ VIEW
+  // ══════════════════════════════════════════════════════════
   if (lessonView === 'quiz' && activeLesson) {
+    const isLastLesson = activeLesson.index === lessons.length;
+
     return (
       <div className="min-h-screen bg-background text-foreground">
         <SiteHeader />
@@ -176,6 +268,7 @@ export default function CourseDetailPage() {
               <SpeakButton text={tr('quizTitle') + ' - ' + activeLesson.title} size="md" className="ml-auto" />
             </div>
 
+            {/* ── Preguntas ── */}
             <div className="space-y-6">
               {activeLesson.quizQuestions?.map((q: any, qi: number) => (
                 <div key={q.id} className="rounded-2xl bg-muted/60 p-5 space-y-3">
@@ -186,10 +279,10 @@ export default function CourseDetailPage() {
                   </div>
                   <div className="space-y-2 pl-9">
                     {q.options.map((opt: string, idx: number) => {
-                      const selected = quizAnswers[q.id] === idx;
-                      const result = quizResults[q.id];
-                      const isCorrect = result !== undefined && idx === q.answer;
-                      const isWrong = result !== undefined && selected && !result;
+                      const selected   = quizAnswers[q.id] === idx;
+                      const result     = quizResults[q.id];
+                      const isCorrect  = result !== undefined && idx === q.answer;
+                      const isWrong    = result !== undefined && selected && !result;
                       return (
                         <button
                           key={idx}
@@ -201,9 +294,9 @@ export default function CourseDetailPage() {
                           }}
                           disabled={result !== undefined}
                           className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium transition-colors border-2 ${
-                            isCorrect ? 'border-puna bg-puna/20 text-puna' :
-                            isWrong ? 'border-destructive bg-destructive/10 text-destructive' :
-                            selected ? 'border-primary bg-primary/10' :
+                            isCorrect ? 'border-green-500 bg-green-500/10 text-green-700 dark:text-green-400' :
+                            isWrong   ? 'border-destructive bg-destructive/10 text-destructive' :
+                            selected  ? 'border-primary bg-primary/10' :
                             'border-transparent bg-background hover:border-primary/40'
                           }`}
                         >
@@ -211,8 +304,8 @@ export default function CourseDetailPage() {
                             {String.fromCharCode(65 + idx)}
                           </span>
                           <span className="flex-1">{opt}</span>
-                          {isCorrect && <span className="text-puna">✓</span>}
-                          {isWrong && <span className="text-destructive">✗</span>}
+                          {isCorrect && <span className="text-green-600">✓</span>}
+                          {isWrong   && <span className="text-destructive">✗</span>}
                           <SpeakButton text={opt} size="sm" />
                         </button>
                       );
@@ -222,19 +315,83 @@ export default function CourseDetailPage() {
               ))}
             </div>
 
-            <button
-              onClick={backToList}
-              className="flex items-center gap-2 rounded-2xl border-2 border-border px-4 py-3 font-bold hover:bg-muted transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4" /> {tr('backToLesson')}
-            </button>
+            {/* ── Resultado del cuestionario ── */}
+            {quizAllCorrect && (
+              <div className="rounded-2xl border-2 border-green-500 bg-green-500/10 p-5 space-y-4">
+                <div className="flex items-center gap-3">
+                  <Trophy className="h-6 w-6 text-green-600" />
+                  <div>
+                    <p className="font-bold text-green-700 dark:text-green-400">
+                      ¡Excelente! Respondiste todo correctamente
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      La clase ha sido marcada como completada
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={goToNextLesson}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-green-500 px-6 py-3.5 font-bold text-white shadow-warm hover:bg-green-600 transition-colors"
+                >
+                  {isLastLesson
+                    ? <><Trophy className="h-4 w-4" /> Ver mis logros</>
+                    : <><ArrowRight className="h-4 w-4" /> Siguiente clase</>
+                  }
+                </button>
+              </div>
+            )}
+
+            {quizHasErrors && (
+              <div className="rounded-2xl border-2 border-destructive/40 bg-destructive/5 p-5 space-y-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">💪</span>
+                  <div>
+                    <p className="font-bold text-destructive">
+                      Algunas respuestas no son correctas
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Las preguntas en rojo necesitan otro intento. Las correctas quedan guardadas.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={retryQuiz}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3.5 font-bold text-primary-foreground shadow-warm hover:bg-primary/90 transition-colors"
+                >
+                  <RotateCcw className="h-4 w-4" /> Intentar de nuevo
+                </button>
+              </div>
+            )}
+
+            {!quizAllDone && (
+              <button
+                onClick={() => setLessonView('topic')}
+                className="flex items-center gap-2 rounded-2xl border-2 border-border px-4 py-3 font-bold hover:bg-muted transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4" /> {tr('backToLesson')}
+              </button>
+            )}
           </div>
+
+          <VirtualTutor
+            mode="quiz"
+            courseTitle={course.title}
+            courseSlug={courseId!}
+            lessonTitle={activeLesson.title}
+            lessonSummary={activeLesson.summary || ''}
+            lessonDetail={activeLesson.detail || ''}
+            lessonIndex={activeLesson.index}
+            totalLessons={lessons.length}
+            lessonsDone={lessonsDone}
+          />
         </div>
       </div>
     );
   }
 
-  // === LESSON LIST VIEW ===
+  // ══════════════════════════════════════════════════════════
+  // LESSON LIST VIEW
+  // ══════════════════════════════════════════════════════════
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SiteHeader />
@@ -276,8 +433,11 @@ export default function CourseDetailPage() {
               </div>
             </div>
             <div className="overflow-hidden rounded-3xl border-4 border-card shadow-warm">
-              <img src={course.imageUrl || 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600'}
-                alt={course.title} className="h-full w-full object-cover aspect-[4/3]" />
+              <img
+                src={course.imageUrl || 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600'}
+                alt={course.title}
+                className="h-full w-full object-cover aspect-[4/3]"
+              />
             </div>
           </div>
         </div>
@@ -292,27 +452,32 @@ export default function CourseDetailPage() {
         <div className="space-y-3">
           {lessons.map((lesson: any) => {
             const isCompleted = lesson.index <= lessonsDone;
-            // Lección disponible si es la primera O si la anterior ya fue completada
             const isAvailable = lesson.index === 1 || lesson.index <= lessonsDone + 1;
-            const isLocked = !isAvailable;
+            const isLocked    = !isAvailable;
+            const isCurrent   = lesson.index === lessonsDone + 1;
+
             return (
               <div
                 key={lesson.id}
                 className={`rounded-3xl border-2 shadow-soft overflow-hidden transition-all ${
-                  isLocked
-                    ? 'border-border/40 bg-muted/30 opacity-60'
-                    : isCompleted
-                      ? 'border-primary/40 bg-card'
-                      : 'border-border bg-card'
+                  isLocked    ? 'border-border/40 bg-muted/30 opacity-60' :
+                  isCompleted ? 'border-primary/40 bg-card' :
+                  isCurrent   ? 'border-primary bg-card ring-2 ring-primary/30' :
+                  'border-border bg-card'
                 }`}
               >
                 <div className="flex w-full items-center gap-4 p-5">
                   <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${
-                    isLocked ? 'bg-muted text-muted-foreground' :
-                    isCompleted ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                    isLocked    ? 'bg-muted text-muted-foreground' :
+                    isCompleted ? 'bg-primary text-primary-foreground' :
+                    isCurrent   ? 'bg-primary/20 text-primary' :
+                    'bg-muted text-muted-foreground'
                   }`}>
-                    {isLocked ? <Lock className="h-5 w-5" /> : isCompleted ? <CheckCircle2 className="h-5 w-5" /> : <BookOpen className="h-5 w-5" />}
+                    {isLocked    ? <Lock className="h-5 w-5" /> :
+                     isCompleted ? <CheckCircle2 className="h-5 w-5" /> :
+                     <BookOpen className="h-5 w-5" />}
                   </div>
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <div className={`font-display text-lg font-bold truncate ${isLocked ? 'text-muted-foreground' : ''}`}>
@@ -326,22 +491,41 @@ export default function CourseDetailPage() {
                         🔒 {tr('lessonLocked')}
                       </div>
                     )}
+                    {isCurrent && !isCompleted && (
+                      <div className="mt-1 text-xs font-bold text-primary">
+                        ▶ Clase actual
+                      </div>
+                    )}
                   </div>
-                  {/* Botones de acción — solo si disponible */}
+
+                  {/* Botones de acción */}
                   {!isLocked && (
                     <div className="flex shrink-0 gap-2">
                       <button
                         onClick={() => openLesson(lesson, 'topic')}
-                        className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground shadow-warm hover:bg-primary/90 transition-colors"
+                        className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-colors ${
+                          isCompleted
+                            ? 'border-2 border-border hover:bg-muted'
+                            : 'bg-primary text-primary-foreground shadow-warm hover:bg-primary/90'
+                        }`}
                       >
-                        <Play className="h-3.5 w-3.5" /> {tr('lessonDo')}
+                        {isCompleted
+                          ? <><BookOpen className="h-3.5 w-3.5" /> Repasar</>
+                          : <><Play className="h-3.5 w-3.5" /> {tr('lessonDo')}</>
+                        }
                       </button>
-                      {isCompleted && lesson.quizQuestions?.length > 0 && (
+                      {/* Cuestionario visible para lecciones con quiz (completadas o en curso) */}
+                      {lesson.quizQuestions?.length > 0 && (
                         <button
                           onClick={() => openLesson(lesson, 'quiz')}
-                          className="flex items-center gap-1.5 rounded-xl border-2 border-border px-3 py-2 text-xs font-bold hover:bg-muted transition-colors"
+                          className={`flex items-center gap-1.5 rounded-xl border-2 px-3 py-2 text-xs font-bold transition-colors ${
+                            isCompleted
+                              ? 'border-primary/40 text-primary hover:bg-primary/10'
+                              : 'border-border hover:bg-muted'
+                          }`}
                         >
-                          <ClipboardList className="h-3.5 w-3.5" /> {tr('lessonQuiz')}
+                          <ClipboardList className="h-3.5 w-3.5" />
+                          {isCompleted ? 'Quiz ✓' : tr('lessonQuiz')}
                         </button>
                       )}
                     </div>

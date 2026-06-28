@@ -81,14 +81,18 @@ export function Chatbot() {
     setMessages((prev) => [...prev, { id: ++msgId, text, from }]);
   };
 
+  const [showBackButton, setShowBackButton] = useState(false);
+
   const handleSend = (text?: string) => {
     const msg = (text ?? input).trim();
     if (!msg) return;
     setInput('');
     setShowSuggestions(false);
+    setShowBackButton(false);
     addMessage(msg, 'user');
     setTimeout(() => {
       addMessage(findAnswer(msg, tr), 'bot');
+      setShowBackButton(true);
     }, 400);
   };
 
@@ -96,8 +100,17 @@ export function Chatbot() {
     const question = tr(key);
     const answerKey = ANSWER_MAP[key] ?? 'chatUnknown';
     setShowSuggestions(false);
+    setShowBackButton(false);
     addMessage(question, 'user');
-    setTimeout(() => addMessage(tr(answerKey), 'bot'), 400);
+    setTimeout(() => {
+      addMessage(tr(answerKey), 'bot');
+      setShowBackButton(true);
+    }, 400);
+  };
+
+  const handleBack = () => {
+    setShowSuggestions(true);
+    setShowBackButton(false);
   };
 
   return (
@@ -165,6 +178,18 @@ export function Chatbot() {
                     <span className="text-primary">→</span> {tr(key)}
                   </button>
                 ))}
+              </div>
+            )}
+
+            {/* Back button after each answer */}
+            {showBackButton && !showSuggestions && (
+              <div className="flex justify-center pt-1">
+                <button
+                  onClick={handleBack}
+                  className="flex items-center gap-1.5 rounded-xl border-2 border-primary/40 px-4 py-2 text-xs font-bold text-primary hover:bg-primary/10 transition-colors"
+                >
+                  ← Volver a preguntar
+                </button>
               </div>
             )}
             <div ref={bottomRef} />

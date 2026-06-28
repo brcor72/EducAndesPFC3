@@ -3,7 +3,8 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
-import compression from 'compression';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const compression = require('compression');
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
@@ -27,7 +28,7 @@ async function bootstrap() {
   app.enableCors({
     origin: isProduction
       ? (origin: string | undefined, cb: Function) => cb(null, true) // acepta todos en producción (Railway/Vercel)
-      : [frontendUrl, 'http://localhost:5173', 'http://localhost:3000'],
+      : (origin: string | undefined, cb: Function) => cb(null, true),
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Refresh-Token'],
