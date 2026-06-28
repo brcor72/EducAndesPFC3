@@ -21,6 +21,8 @@ services:
           property: connectionString
       - key: FRONTEND_URL
         value: https://educandes.vercel.app
+      - key: GROQ_API_KEY
+        sync: false
 
 databases:
   - name: educandes-db
