@@ -45,30 +45,21 @@ function pickByHash(arr: string[], seed: string): string {
 }
 
 export function buildAvatarUrl(profile: AvatarProfile): string {
-  const seed   = encodeURIComponent(profile.displayName || 'usuario');
-  const skin   = SKIN_MAP[profile.skinTone ?? ''] ?? 'tanned';
-  const isMale = profile.gender === 'masculino';
-  const tops   = isMale ? TOP_MALE : TOP_FEMALE;
-  const top    = pickByHash(tops, profile.displayName ?? 'u');
-  const cloth  = CLOTHING_MAP[profile.activity ?? ''] ?? 'graphicShirt';
-  const clothColor = CLOTHING_COLOR_MAP[profile.activity ?? ''] ?? 'e6e6e6';
-  const beard  = isMale && (profile.birthYear ?? 2000) < 1990 ? 'beardMedium' : 'blank';
-  const eyes   = pickByHash(['default', 'happy', 'wink', 'squint'], profile.displayName ?? 'u');
+  // Seed compuesto: nombre + género + actividad → avatar único por perfil
+  const seedStr = [
+    profile.displayName ?? 'usuario',
+    profile.gender ?? '',
+    profile.activity ?? '',
+    profile.birthYear ?? '',
+  ].join('-');
+  const seed = encodeURIComponent(seedStr);
+  const skin = SKIN_MAP[profile.skinTone ?? ''] ?? 'tanned';
 
   return (
     `https://api.dicebear.com/7.x/avataaars/svg` +
     `?seed=${seed}` +
     `&skinColor=${skin}` +
-    `&top=${top}` +
-    `&facialHair=${beard}` +
-    `&eyes=${eyes}` +
-    `&clothing=${cloth}` +
-    `&clothingGraphicType=bear` +
-    `&clothingColor=${clothColor}` +
-    `&accessories=blank` +
-    `&mouth=smile` +
-    `&eyebrow=defaultNatural` +
-    `&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc`
+    `&backgroundColor=b6e3f4,c0aede,d1d4f9,ffd5dc,ffdfbf`
   );
 }
 
