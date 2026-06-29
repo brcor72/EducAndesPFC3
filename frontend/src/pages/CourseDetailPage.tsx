@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, ArrowRight, CheckCircle2, BookOpen,
   MessageSquare, ClipboardList, Play, Lock, RotateCcw, Trophy, Award, DownloadCloud,
@@ -21,6 +21,7 @@ type LessonView = 'list' | 'topic' | 'quiz';
 
 export default function CourseDetailPage() {
   const { courseId } = useParams<{ courseId: string }>();
+  const navigate = useNavigate();
   const { user } = useAuthStore();
   const { tr } = useI18nStore();
   const { isOnline } = useNetworkStatus();
@@ -177,14 +178,28 @@ export default function CourseDetailPage() {
       toast.error('Necesitas conexión a internet para descargar');
       return;
     }
+    if (!user) {
+      toast.error('Debes iniciar sesión para descargar');
+      return;
+    }
     setIsDownloading(true);
     try {
       // Fetch all lessons explicitly to cache them via Workbox
       for (const l of lessons) {
         await coursesService.getLesson(courseId!, l.index);
       }
-      addDownload(courseId!);
-      toast.success('¡Curso descargado con éxito!');
+      
+      // Simulate heavy download for 10 seconds as requested
+      await new Promise(resolve => setTimeout(resolve, 10000));
+      
+      addDownload(user.id, courseId!);
+      toast.success('¡Curso descargado con éxito!', {
+        duration: 5000,
+        action: {
+          label: 'Ver descargas',
+          onClick: () => navigate('/cursos#downloads')
+        }
+      });
     } catch (err) {
       toast.error('Error al descargar el curso');
     } finally {
@@ -490,11 +505,11 @@ export default function CourseDetailPage() {
                 <Link to={`/foros/${courseId}`} className="inline-flex items-center gap-2 rounded-2xl border-2 border-border px-5 py-2.5 font-bold hover:bg-muted transition-colors">
                   <MessageSquare className="h-4 w-4" /> {tr('goForum')}
                 </Link>
-                {isDownloaded(courseId!) ? (
+                {user && isDownloaded(user.id, courseId!) ? (
                   <div className="inline-flex items-center gap-2 rounded-2xl bg-primary/10 text-primary px-5 py-2.5 font-bold">
                     <CheckCircle2 className="h-4 w-4" /> Descargado
                   </div>
-                ) : (
+                ) : user ? (
                   <button
                     disabled={isDownloading || !isOnline}
                     onClick={handleDownload}
@@ -503,7 +518,7 @@ export default function CourseDetailPage() {
                     <DownloadCloud className="h-4 w-4" /> 
                     {isDownloading ? 'Descargando...' : 'Descargar para ver offline'}
                   </button>
-                )}
+                ) : null}
                 {!user && (
                   <Link to="/auth" className="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-2.5 font-bold text-primary-foreground shadow-warm hover:bg-primary/90 transition-colors">
                     {tr('loginToSave')} <ArrowRight className="h-4 w-4" />
