@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { User, Save, Bell, Sparkles, RefreshCw } from 'lucide-react';
+import { User, Save, Bell, Sparkles, RefreshCw, Wand2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { SiteHeader } from '../components/layout/SiteHeader';
@@ -20,6 +20,7 @@ export default function ProfilePage() {
   const { user, setUser } = useAuthStore();
   const qc = useQueryClient();
 
+  const [aiAvatarUrl, setAiAvatarUrl] = useState<string | null>((user as any)?.avatarUrl?.startsWith('data:') ? (user as any).avatarUrl : null);
   const [displayName, setDisplayName] = useState(user?.displayName ?? '');
   const [community,   setCommunity]   = useState(user?.community ?? '');
   const [gender,      setGender]      = useState((user as any)?.gender ?? 'no_especificado');
@@ -60,6 +61,16 @@ export default function ProfilePage() {
     onError: () => toast.error('Error al actualizar'),
   });
 
+  const generateAvatarMutation = useMutation({
+    mutationFn: () => usersService.generateAvatar(),
+    onSuccess: (url) => {
+      setAiAvatarUrl(url);
+      setUser({ ...user!, avatarUrl: url } as any);
+      toast.success('¡Avatar generado con IA!');
+    },
+    onError: () => toast.error('Error al generar avatar. Intenta de nuevo.'),
+  });
+
   const markAllReadMutation = useMutation({
     mutationFn: () => notificationsService.markAllRead(),
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['notifications'] }); toast.success('Todas leídas'); },
@@ -86,18 +97,31 @@ export default function ProfilePage() {
 
             {/* Avatar preview */}
             <div className="rounded-2xl bg-muted/40 p-4 flex items-center gap-4">
-              <AndeanAvatar profile={profile} size={80}
-                className="border-4 border-primary/30 shadow-warm" />
-              <div>
+              {aiAvatarUrl ? (
+                <img src={aiAvatarUrl} alt="avatar IA" width={80} height={80}
+                  className="rounded-full border-4 border-primary/30 shadow-warm object-cover"
+                  style={{ width: 80, height: 80 }} />
+              ) : (
+                <AndeanAvatar profile={profile} size={80}
+                  className="border-4 border-primary/30 shadow-warm" />
+              )}
+              <div className="flex-1">
                 <div className="flex items-center gap-1.5 text-sm font-bold text-primary">
-                  <Sparkles className="h-4 w-4" /> Avatar generado con IA
+                  <Sparkles className="h-4 w-4" />
+                  {aiAvatarUrl ? 'Avatar generado con IA' : 'Avatar andino'}
                 </div>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Se actualiza en tiempo real según tus datos
+                  {aiAvatarUrl ? 'Imagen única generada por IA para ti' : 'Completa tu perfil y genera con IA'}
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  Único para ti en EducAndes
-                </p>
+                <button
+                  onClick={() => generateAvatarMutation.mutate()}
+                  disabled={generateAvatarMutation.isPending}
+                  className="mt-2 flex items-center gap-1.5 rounded-xl bg-primary/10 border border-primary/30 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20 disabled:opacity-60 transition-colors"
+                >
+                  {generateAvatarMutation.isPending
+                    ? <><RefreshCw className="h-3 w-3 animate-spin" /> Generando (~30 seg)…</>
+                    : <><Wand2 className="h-3 w-3" /> Generar con IA</>}
+                </button>
               </div>
             </div>
 

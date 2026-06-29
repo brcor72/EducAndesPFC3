@@ -129,4 +129,9 @@ export const usersService = {
     const { data } = await api.get('/users/me/stats');
     return data.data;
   },
+
+  async generateAvatar(): Promise<string> {
+    const { data } = await api.post('/users/me/generate-avatar');
+    return data;
+  },
 };
