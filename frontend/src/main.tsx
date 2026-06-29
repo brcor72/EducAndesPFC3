@@ -5,6 +5,13 @@ import { Toaster } from 'sonner';
 import App from './App';
 import './styles.css';
 
+// PWA Service Worker Registration
+import { registerSW } from 'virtual:pwa-register';
+
+if (typeof window !== 'undefined') {
+  registerSW({ immediate: true });
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: { retry: 1, staleTime: 30_000, refetchOnWindowFocus: false },
