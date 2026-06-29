@@ -1,4 +1,4 @@
-import { IsOptional, IsString, MaxLength, IsIn } from 'class-validator';
+import { IsOptional, IsString, MaxLength, IsIn, IsInt, Min, Max } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateUserDto {
@@ -17,4 +17,20 @@ export class UpdateUserDto {
   @ApiPropertyOptional()
   @IsOptional() @IsString()
   avatarUrl?: string;
+
+  @ApiPropertyOptional({ enum: ['masculino', 'femenino', 'no_especificado'] })
+  @IsOptional() @IsIn(['masculino', 'femenino', 'no_especificado'])
+  gender?: string;
+
+  @ApiPropertyOptional({ enum: ['claro', 'medio', 'moreno', 'oscuro'] })
+  @IsOptional() @IsIn(['claro', 'medio', 'moreno', 'oscuro'])
+  skinTone?: string;
+
+  @ApiPropertyOptional({ example: 1995 })
+  @IsOptional() @IsInt() @Min(1940) @Max(2015)
+  birthYear?: number;
+
+  @ApiPropertyOptional({ enum: ['agricultor', 'tejedora', 'ganadero', 'pastor', 'artesana', 'comerciante', 'docente', 'estudiante'] })
+  @IsOptional() @IsIn(['agricultor', 'tejedora', 'ganadero', 'pastor', 'artesana', 'comerciante', 'docente', 'estudiante'])
+  activity?: string;
 }

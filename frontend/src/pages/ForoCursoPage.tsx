@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, MessageSquarePlus, Send, User, Clock, Trash2 } from 'lucide-react';
+import { ArrowLeft, MessageSquarePlus, Send, Clock, Trash2 } from 'lucide-react';
+import { UserAvatar } from '../components/avatar/UserAvatar';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { SiteHeader } from '../components/layout/SiteHeader';
@@ -144,8 +145,8 @@ export default function ForoCursoPage() {
               <li key={t.id} className="rounded-3xl border-2 border-border bg-card p-6 shadow-soft">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                    <span className="inline-flex items-center gap-1">
-                      <User className="h-4 w-4 text-primary" />
+                    <span className="inline-flex items-center gap-2">
+                      <UserAvatar avatarUrl={t.author?.avatarUrl} profile={t.author} size={32} />
                       <span className="font-bold text-foreground">{t.author?.displayName ?? 'Aprendiz'}</span>
                       {t.author?.community && <span>· {t.author.community}</span>}
                     </span>
@@ -217,7 +218,7 @@ function ThreadReplies({ threadId, canReply }: { threadId: string; canReply: boo
             <li key={r.id} className="rounded-2xl bg-muted/60 p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <User className="h-4 w-4 text-primary" />
+                  <UserAvatar avatarUrl={r.author?.avatarUrl} profile={r.author} size={28} />
                   <span className="font-bold text-foreground">{r.author?.displayName ?? 'Aprendiz'}</span>
                   <span>· {timeAgo(r.createdAt)}</span>
                 </div>

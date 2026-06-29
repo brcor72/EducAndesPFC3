@@ -63,6 +63,10 @@ export class UsersService {
         community: dto.community,
         preferredLang: dto.preferredLang,
         avatarUrl: dto.avatarUrl,
+        gender: dto.gender,
+        skinTone: dto.skinTone,
+        birthYear: dto.birthYear,
+        activity: dto.activity,
       },
       include: { role: true },
     });

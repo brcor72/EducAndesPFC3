@@ -9,6 +9,10 @@ interface User {
   community?: string;
   preferredLang: string;
   avatarUrl?: string;
+  gender?: string;
+  skinTone?: string;
+  birthYear?: number;
+  activity?: string;
   role: { id: string; name: string };
   createdAt: string;
 }

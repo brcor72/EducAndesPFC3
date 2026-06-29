@@ -1,14 +1,15 @@
-import { buildAvatarUrl } from '../../lib/avatars';
+import { buildAvatarUrl, type AvatarProfile } from '../../lib/avatars';
 
 interface Props {
   avatarUrl?: string | null;
-  seed?: string;
+  profile?: AvatarProfile;
   size?: number;
   className?: string;
 }
 
-export function UserAvatar({ avatarUrl, seed = 'usuario', size = 36, className = '' }: Props) {
-  const src = avatarUrl || buildAvatarUrl(seed);
+export function UserAvatar({ avatarUrl, profile, size = 36, className = '' }: Props) {
+  const src = avatarUrl || buildAvatarUrl(profile ?? {});
+  const fallback = buildAvatarUrl(profile ?? {});
   return (
     <img
       src={src}
@@ -16,8 +17,8 @@ export function UserAvatar({ avatarUrl, seed = 'usuario', size = 36, className =
       width={size}
       height={size}
       className={`rounded-full object-cover bg-muted ${className}`}
-      style={{ width: size, height: size }}
-      onError={(e) => { (e.target as HTMLImageElement).src = buildAvatarUrl(seed); }}
+      style={{ width: size, height: size, flexShrink: 0 }}
+      onError={(e) => { (e.target as HTMLImageElement).src = fallback; }}
     />
   );
 }

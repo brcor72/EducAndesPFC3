@@ -49,6 +49,10 @@ model User {
   preferredLang Lang     @default(es)
   passwordHash  String
   avatarUrl     String?
+  gender        String?   @db.VarChar(20)
+  skinTone      String?   @db.VarChar(20)
+  birthYear     Int?
+  activity      String?   @db.VarChar(50)
   roleId        String
   role          Role     @relation(fields: [roleId], references: [id])
   isActive      Boolean  @default(true)
