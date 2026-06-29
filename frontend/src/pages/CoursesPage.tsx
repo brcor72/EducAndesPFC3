@@ -6,6 +6,7 @@ import { SiteHeader } from '../components/layout/SiteHeader';
 import { AndeanBorder } from '../components/layout/AndeanBorder';
 import { coursesService } from '../services/courses.service';
 import { useI18nStore } from '../store/i18n.store';
+import { useDownloadsStore } from '../store/downloads.store';
 import { SpeakButton } from '../components/audio/SpeakButton';
 
 const CATEGORY_FILTER_KEYS: Record<string, string> = {
@@ -25,6 +26,7 @@ const CATEGORY_TONE: Record<string, string> = {
 
 export default function CoursesPage() {
   const { tr } = useI18nStore();
+  const { downloadedCourseIds } = useDownloadsStore();
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('ALL');
 
@@ -34,12 +36,13 @@ export default function CoursesPage() {
   });
 
   const filtered = courses.filter((c: any) => {
-    const matchCat = activeCategory === 'ALL' || c.category === activeCategory;
+    if (activeCategory === 'DOWNLOADS' && !downloadedCourseIds.includes(c.id || c.slug)) return false;
+    const matchCat = activeCategory === 'ALL' || activeCategory === 'DOWNLOADS' || c.category === activeCategory;
     const matchSearch = !search || c.title.toLowerCase().includes(search.toLowerCase()) || c.short?.toLowerCase().includes(search.toLowerCase());
     return matchCat && matchSearch;
   });
 
-  const categories = ['ALL', 'CAMPO', 'NEGOCIO', 'TECNOLOGIA', 'ENERGIA'];
+  const categories = ['ALL', 'DOWNLOADS', 'CAMPO', 'NEGOCIO', 'TECNOLOGIA', 'ENERGIA'];
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -80,7 +83,7 @@ export default function CoursesPage() {
                     : 'border-2 border-border hover:bg-muted'
                 }`}
               >
-                {tr(CATEGORY_FILTER_KEYS[cat])}
+                {cat === 'DOWNLOADS' ? 'Mis descargas' : tr(CATEGORY_FILTER_KEYS[cat])}
               </button>
             ))}
           </div>
