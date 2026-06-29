@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, ArrowRight, CheckCircle2, BookOpen,
-  MessageSquare, ClipboardList, Play, Lock, RotateCcw, Trophy, Award, DownloadCloud,
+  MessageSquare, ClipboardList, Play, Lock, RotateCcw, Trophy, Award, DownloadCloud, Trash2,
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -25,7 +25,7 @@ export default function CourseDetailPage() {
   const { user } = useAuthStore();
   const { tr } = useI18nStore();
   const { isOnline } = useNetworkStatus();
-  const { isDownloaded, addDownload } = useDownloadsStore();
+  const { isDownloaded, addDownload, removeDownload } = useDownloadsStore();
   const qc = useQueryClient();
 
   const [activeLesson, setActiveLesson]   = useState<any>(null);
@@ -205,6 +205,12 @@ export default function CourseDetailPage() {
     } finally {
       setIsDownloading(false);
     }
+  };
+
+  const handleRemoveDownload = () => {
+    if (!user) return;
+    removeDownload(user.id, courseId!);
+    toast.info('Descarga eliminada');
   };
 
   // ══════════════════════════════════════════════════════════
@@ -506,9 +512,13 @@ export default function CourseDetailPage() {
                   <MessageSquare className="h-4 w-4" /> {tr('goForum')}
                 </Link>
                 {user && isDownloaded(user.id, courseId!) ? (
-                  <div className="inline-flex items-center gap-2 rounded-2xl bg-primary/10 text-primary px-5 py-2.5 font-bold">
-                    <CheckCircle2 className="h-4 w-4" /> Descargado
-                  </div>
+                  <button
+                    onClick={handleRemoveDownload}
+                    className="inline-flex items-center gap-2 rounded-2xl bg-primary/10 text-primary px-5 py-2.5 font-bold hover:bg-destructive/10 hover:text-destructive transition-colors group"
+                  >
+                    <span className="flex items-center gap-2 group-hover:hidden"><CheckCircle2 className="h-4 w-4" /> Descargado</span>
+                    <span className="hidden items-center gap-2 group-hover:flex"><Trash2 className="h-4 w-4" /> Eliminar descarga</span>
+                  </button>
                 ) : user ? (
                   <button
                     disabled={isDownloading || !isOnline}
@@ -596,9 +606,8 @@ export default function CourseDetailPage() {
                   {!isLocked && (
                     <div className="flex shrink-0 gap-2">
                       <button
-                        disabled={!isOnline}
                         onClick={() => openLesson(lesson, 'topic')}
-                        className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                        className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-colors ${
                           isCompleted
                             ? 'border-2 border-border hover:bg-muted'
                             : 'bg-primary text-primary-foreground shadow-warm hover:bg-primary/90'
