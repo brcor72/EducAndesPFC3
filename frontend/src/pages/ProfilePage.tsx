@@ -6,7 +6,7 @@ import { SiteHeader } from '../components/layout/SiteHeader';
 import { AndeanBorder } from '../components/layout/AndeanBorder';
 import { useAuthStore } from '../store/auth.store';
 import { usersService, notificationsService } from '../services/courses.service';
-import { ACTIVITY_OPTIONS } from '../lib/avatars';
+import { ACTIVITY_OPTIONS, generateAiAvatar } from '../lib/avatars';
 import { AndeanAvatar } from '../components/avatar/AndeanAvatar';
 
 const SKIN_OPTIONS = [
@@ -62,7 +62,11 @@ export default function ProfilePage() {
   });
 
   const generateAvatarMutation = useMutation({
-    mutationFn: () => usersService.generateAvatar(),
+    mutationFn: async () => {
+      const dataUrl = await generateAiAvatar(profile);
+      await usersService.update(user!.id, { avatarUrl: dataUrl });
+      return dataUrl;
+    },
     onSuccess: (url) => {
       setAiAvatarUrl(url);
       setUser({ ...user!, avatarUrl: url } as any);

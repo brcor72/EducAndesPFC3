@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Put, Post, Delete, Body, Param, Query,
+  Controller, Get, Put, Delete, Body, Param, Query,
   UseGuards, ParseIntPipe, DefaultValuePipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
@@ -54,12 +54,6 @@ export class UsersController {
     @CurrentUser() user: any,
   ) {
     return this.usersService.update(id, dto, requesterId, user.role?.name);
-  }
-
-  @Post('me/generate-avatar')
-  @ApiOperation({ summary: 'Generar avatar con IA (HuggingFace)' })
-  generateAvatar(@CurrentUser('id') userId: string) {
-    return this.usersService.generateAvatar(userId);
   }
 
   @Delete(':id')
