@@ -3,6 +3,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 import { TutorChatDto } from './tutor.dto';
+import { RagService } from '../rag/rag.service';
 
 const LANG_NAMES: Record<string, string> = {
   es: 'español',
@@ -11,11 +12,10 @@ const LANG_NAMES: Record<string, string> = {
   shp: 'shipibo-konibo',
 };
 
-// Models ordered by speed — Groq serves them all instantly
 const GROQ_MODELS = [
-  'llama-3.1-8b-instant',   // fastest, 14400 RPD free
-  'llama3-8b-8192',          // fallback 1
-  'gemma2-9b-it',            // fallback 2
+  'llama-3.1-8b-instant',
+  'llama3-8b-8192',
+  'gemma2-9b-it',
 ];
 
 @Injectable()
@@ -23,17 +23,26 @@ export class TutorService {
   private readonly logger = new Logger(TutorService.name);
   private groq: Groq;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private ragService: RagService,
+  ) {
     const apiKey = this.configService.get<string>('GROQ_API_KEY') ?? '';
     this.groq = new Groq({ apiKey });
   }
 
-  private buildSystemPrompt(dto: TutorChatDto): string {
+  private buildSystemPrompt(dto: TutorChatDto, ragContext: string): string {
     const selectedLang = LANG_NAMES[dto.lang] ?? 'español';
     const progressDesc =
       dto.lessonsDone > 0
         ? `Ha completado ${dto.lessonsDone} de ${dto.totalLessons} lecciones.`
         : 'Acaba de comenzar este curso.';
+
+    const ragSection = ragContext
+      ? `\nCONOCIMIENTO RECUPERADO DE LA BASE VECTORIAL (lecciones más relevantes para esta pregunta):
+${ragContext}
+Usa este conocimiento para enriquecer tu respuesta. Cita el nombre del curso o lección si es útil.\n`
+      : '';
 
     const base = `Eres "Yachay", un tutor virtual educativo especializado en capacitación tecnológica y automatización de procesos para comunidades rurales.
 
@@ -44,7 +53,7 @@ CONTEXTO DEL ESTUDIANTE:
 - Contenido completo: ${dto.lessonDetail}
 - Progreso: ${progressDesc}
 - Idioma preferido del estudiante: ${selectedLang}
-
+${ragSection}
 REGLAS DE IDIOMA:
 - Detecta automáticamente el idioma principal utilizado por el estudiante.
 - Responde siempre en el mismo idioma utilizado por el estudiante.
@@ -62,7 +71,6 @@ REGLAS PEDAGÓGICAS:
 - Evita tecnicismos innecesarios.
 - Explica conceptos mediante ejemplos prácticos relacionados con actividades cotidianas.
 - Actúa como un profesor paciente y amigable.
-- Responde utilizando únicamente la información del curso, tema y lección actuales.
 - Solo texto plano. Sin asteriscos, guiones ni markdown.
 - Máximo 4 oraciones por respuesta para que sea fácil de escuchar en voz alta.
 
@@ -92,9 +100,24 @@ MODO CLASE:
   }
 
   async streamChat(dto: TutorChatDto, res: Response): Promise<void> {
-    const systemPrompt = this.buildSystemPrompt(dto);
+    // ── RAG: buscar lecciones relevantes antes de construir el prompt ──────────
+    let ragContext = '';
+    try {
+      const hits = await this.ragService.searchSimilar(dto.message, 3);
+      // Solo incluir resultados con distancia coseno < 0.6 para evitar ruido
+      const relevant = hits.filter((h) => h.distance < 0.6);
+      if (relevant.length > 0) {
+        ragContext = relevant
+          .map((h, i) => `[Fuente ${i + 1}]\n${h.content.slice(0, 600)}`)
+          .join('\n\n');
+        this.logger.debug(`RAG: ${relevant.length} fuentes relevantes encontradas`);
+      }
+    } catch (err: any) {
+      this.logger.warn('RAG falló, continuando sin contexto adicional: ' + err?.message);
+    }
 
-    // Build message history in OpenAI format (Groq is compatible)
+    const systemPrompt = this.buildSystemPrompt(dto, ragContext);
+
     const messages: Groq.Chat.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemPrompt },
       ...dto.history.slice(-16).map((m) => ({
@@ -131,7 +154,11 @@ MODO CLASE:
         res.end();
         return;
       } catch (error: any) {
-        const is429 = error?.status === 429 || error?.message?.includes('429') || error?.message?.includes('quota') || error?.message?.includes('rate');
+        const is429 =
+          error?.status === 429 ||
+          error?.message?.includes('429') ||
+          error?.message?.includes('quota') ||
+          error?.message?.includes('rate');
         if (is429) {
           this.logger.warn(`Groq model ${modelName} rate limited, trying next...`);
           lastError = error;
@@ -142,9 +169,11 @@ MODO CLASE:
       }
     }
 
-    // All models failed
     this.logger.error('All Groq models failed: ' + lastError?.message);
-    const is429 = lastError?.status === 429 || lastError?.message?.includes('rate') || lastError?.message?.includes('quota');
+    const is429 =
+      lastError?.status === 429 ||
+      lastError?.message?.includes('rate') ||
+      lastError?.message?.includes('quota');
     const friendlyMsg = is429
       ? 'Estoy recibiendo muchas consultas. Por favor intenta en unos segundos.'
       : 'Tuve un inconveniente al procesar tu pregunta. ¿Podrías intentarlo de nuevo?';
