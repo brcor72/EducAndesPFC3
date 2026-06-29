@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft, ArrowRight, CheckCircle2, BookOpen,
-  MessageSquare, ClipboardList, Play, Lock, RotateCcw, Trophy, Award,
+  MessageSquare, ClipboardList, Play, Lock, RotateCcw, Trophy, Award, DownloadCloud,
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -14,6 +14,8 @@ import { useI18nStore } from '../store/i18n.store';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { SpeakButton } from '../components/audio/SpeakButton';
 import { VirtualTutor } from '../components/tutor/VirtualTutor';
+import { offlineSyncService } from '../services/offlineSync.service';
+import { useDownloadsStore } from '../store/downloads.store';
 
 type LessonView = 'list' | 'topic' | 'quiz';
 
@@ -22,12 +24,14 @@ export default function CourseDetailPage() {
   const { user } = useAuthStore();
   const { tr } = useI18nStore();
   const { isOnline } = useNetworkStatus();
+  const { isDownloaded, addDownload } = useDownloadsStore();
   const qc = useQueryClient();
 
   const [activeLesson, setActiveLesson]   = useState<any>(null);
   const [lessonView, setLessonView]       = useState<LessonView>('list');
   const [quizAnswers, setQuizAnswers]     = useState<Record<string, number | null>>({});
   const [quizResults, setQuizResults]     = useState<Record<string, boolean>>({});
+  const [isDownloading, setIsDownloading] = useState(false);
   const completionFiredRef                = useRef(false);
 
   const { data: course, isLoading } = useQuery({
@@ -45,13 +49,40 @@ export default function CourseDetailPage() {
   const lessonsDone  = progressRow?.lessonsDone ?? 0;
 
   const updateProgressMutation = useMutation({
-    mutationFn: (done: number) => progressService.updateProgress(courseId!, done),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['progress'] }); },
+    mutationFn: async (done: number) => {
+      if (isOnline) {
+        return progressService.updateProgress(courseId!, done);
+      } else {
+        offlineSyncService.enqueueProgressUpdate(courseId!, done);
+        return Promise.resolve();
+      }
+    },
+    onSuccess: (data, done) => {
+      if (isOnline) qc.invalidateQueries({ queryKey: ['progress'] });
+      else {
+        qc.setQueryData(['progress'], (old: any) => {
+          if (!old) return old;
+          const newRows = old.rows?.map((r: any) =>
+            (r.course?.slug === courseId || r.courseId === course?.id)
+              ? { ...r, lessonsDone: Math.max(r.lessonsDone, done) }
+              : r
+          );
+          return { ...old, rows: newRows || [] };
+        });
+      }
+    },
   });
 
   const submitQuizMutation = useMutation({
-    mutationFn: ({ questionId, selectedAnswer }: { questionId: string; selectedAnswer: number }) =>
-      coursesService.submitQuiz(courseId!, 'lesson', questionId, selectedAnswer),
+    mutationFn: async ({ questionId, selectedAnswer, isCorrect }: { questionId: string; selectedAnswer: number; isCorrect: boolean }) => {
+      if (isOnline) {
+        const res = await coursesService.submitQuiz(courseId!, activeLesson.id, questionId, selectedAnswer);
+        return { isCorrect: res.isCorrect };
+      } else {
+        offlineSyncService.enqueueQuizSubmission(courseId!, activeLesson.id, questionId, selectedAnswer);
+        return { isCorrect };
+      }
+    },
     onSuccess: (result, { questionId }) => {
       setQuizResults((prev) => ({ ...prev, [questionId]: result.isCorrect }));
     },
@@ -138,6 +169,27 @@ export default function CourseDetailPage() {
     setQuizAnswers(resetAnswers);
     setQuizResults(resetResults);
     completionFiredRef.current = false;
+  };
+
+  // Download entire course offline
+  const handleDownload = async () => {
+    if (!isOnline) {
+      toast.error('Necesitas conexión a internet para descargar');
+      return;
+    }
+    setIsDownloading(true);
+    try {
+      // Fetch all lessons explicitly to cache them via Workbox
+      for (const l of lessons) {
+        await coursesService.getLesson(courseId!, l.index);
+      }
+      addDownload(courseId!);
+      toast.success('¡Curso descargado con éxito!');
+    } catch (err) {
+      toast.error('Error al descargar el curso');
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   // ══════════════════════════════════════════════════════════
@@ -291,7 +343,7 @@ export default function CourseDetailPage() {
                           onClick={() => {
                             setQuizAnswers((prev) => ({ ...prev, [q.id]: idx }));
                             if (user && result === undefined) {
-                              submitQuizMutation.mutate({ questionId: q.id, selectedAnswer: idx });
+                              submitQuizMutation.mutate({ questionId: q.id, selectedAnswer: idx, isCorrect: idx === q.answer });
                             }
                           }}
                           disabled={result !== undefined}
@@ -357,7 +409,6 @@ export default function CourseDetailPage() {
                   </div>
                 </div>
                 <button
-                  disabled={!isOnline}
                   onClick={retryQuiz}
                   className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3.5 font-bold text-primary-foreground shadow-warm hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -439,6 +490,20 @@ export default function CourseDetailPage() {
                 <Link to={`/foros/${courseId}`} className="inline-flex items-center gap-2 rounded-2xl border-2 border-border px-5 py-2.5 font-bold hover:bg-muted transition-colors">
                   <MessageSquare className="h-4 w-4" /> {tr('goForum')}
                 </Link>
+                {isDownloaded(courseId!) ? (
+                  <div className="inline-flex items-center gap-2 rounded-2xl bg-primary/10 text-primary px-5 py-2.5 font-bold">
+                    <CheckCircle2 className="h-4 w-4" /> Descargado
+                  </div>
+                ) : (
+                  <button
+                    disabled={isDownloading || !isOnline}
+                    onClick={handleDownload}
+                    className="inline-flex items-center gap-2 rounded-2xl border-2 border-border px-5 py-2.5 font-bold hover:bg-muted transition-colors disabled:opacity-50"
+                  >
+                    <DownloadCloud className="h-4 w-4" /> 
+                    {isDownloading ? 'Descargando...' : 'Descargar para ver offline'}
+                  </button>
+                )}
                 {!user && (
                   <Link to="/auth" className="inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-2.5 font-bold text-primary-foreground shadow-warm hover:bg-primary/90 transition-colors">
                     {tr('loginToSave')} <ArrowRight className="h-4 w-4" />

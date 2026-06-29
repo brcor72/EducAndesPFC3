@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/auth.store';
 import { OnboardingTutorial } from './components/tutorial/OnboardingTutorial';
 import { Chatbot } from './components/chatbot/Chatbot';
+import { offlineSyncService } from './services/offlineSync.service';
 
 // Pages
 import HomePage from './pages/HomePage';
@@ -39,6 +40,15 @@ export default function App() {
 
   useEffect(() => {
     loadMe();
+
+    const handleOnline = () => {
+      offlineSyncService.syncAll();
+    };
+    window.addEventListener('online', handleOnline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+    };
   }, [loadMe]);
 
   return (
