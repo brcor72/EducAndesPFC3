@@ -7,10 +7,10 @@ export interface AvatarProfile {
 }
 
 const SKIN_MAP: Record<string, string> = {
-  claro:   'light',
-  medio:   'tanned',
-  moreno:  'brown',
-  oscuro:  'darkBrown',
+  claro:   'f8d25c',
+  medio:   'ae5d29',
+  moreno:  '724133',
+  oscuro:  '4a312c',
 };
 
 const TOP_MALE   = ['shortHairShortCurly', 'shortHairShortFlat', 'shortHairShortWaved', 'shortHairSides'];
