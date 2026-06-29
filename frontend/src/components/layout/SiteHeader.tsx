@@ -97,7 +97,7 @@ export function SiteHeader() {
                 onClick={() => setUserMenuOpen((v) => !v)}
                 className="flex items-center gap-2 rounded-xl border-2 border-border bg-card px-3 py-2 text-sm font-bold hover:border-primary/50 transition-colors"
               >
-                <UserAvatar avatarKey={user.avatarUrl} size={28} />
+                <UserAvatar avatarUrl={user.avatarUrl} seed={user.displayName || user.dni} size={28} />
                 <span className="hidden max-w-[120px] truncate md:block">{user.displayName}</span>
               </button>
 

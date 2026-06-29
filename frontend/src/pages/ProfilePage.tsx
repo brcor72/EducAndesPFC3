@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { User, Save, Bell } from 'lucide-react';
+import { User, Save, Bell, Sparkles } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { SiteHeader } from '../components/layout/SiteHeader';
 import { AndeanBorder } from '../components/layout/AndeanBorder';
 import { useAuthStore } from '../store/auth.store';
 import { usersService, notificationsService } from '../services/courses.service';
-import { AVATAR_OPTIONS } from '../lib/avatars';
+import { AVATAR_STYLES, buildAvatarUrl, getStyleKey } from '../lib/avatars';
 import { UserAvatar } from '../components/avatar/UserAvatar';
 
 export default function ProfilePage() {
@@ -15,7 +15,10 @@ export default function ProfilePage() {
 
   const [displayName, setDisplayName] = useState(user?.displayName ?? '');
   const [community, setCommunity] = useState(user?.community ?? '');
-  const [avatarKey, setAvatarKey] = useState(user?.avatarUrl ?? 'estudiante');
+  const [selectedStyle, setSelectedStyle] = useState(() => getStyleKey(user?.avatarUrl));
+
+  const seed = user?.displayName || user?.dni || 'usuario';
+  const previewUrl = buildAvatarUrl(seed, selectedStyle);
 
   const { data: notifData } = useQuery({
     queryKey: ['notifications'],
@@ -30,7 +33,11 @@ export default function ProfilePage() {
   const notifications = notifData?.data ?? notifData ?? [];
 
   const updateMutation = useMutation({
-    mutationFn: () => usersService.update(user!.id, { displayName, community, avatarUrl: avatarKey }),
+    mutationFn: () => usersService.update(user!.id, {
+      displayName,
+      community,
+      avatarUrl: buildAvatarUrl(displayName || seed, selectedStyle),
+    }),
     onSuccess: (updated) => {
       setUser({ ...user!, ...updated });
       toast.success('Perfil actualizado');
@@ -61,30 +68,41 @@ export default function ProfilePage() {
             <User className="h-6 w-6 text-primary" /> Información personal
           </h2>
           <div className="space-y-4">
-            {/* Avatar picker */}
+
+            {/* Avatar generado con IA */}
             <div>
-              <label className="mb-2 block text-sm font-bold">Tu avatar</label>
-              <div className="flex items-center gap-3 mb-3">
-                <UserAvatar avatarKey={avatarKey} size={56} />
-                <span className="text-sm text-muted-foreground">
-                  {AVATAR_OPTIONS.find(a => a.key === avatarKey)?.label}
-                </span>
+              <label className="mb-2 block text-sm font-bold flex items-center gap-1.5">
+                <Sparkles className="h-4 w-4 text-primary" /> Avatar generado con IA
+              </label>
+              <div className="flex items-center gap-4 mb-3">
+                <UserAvatar avatarUrl={previewUrl} seed={seed} size={72} className="border-4 border-primary/30 shadow-warm" />
+                <div>
+                  <p className="text-sm font-bold">{AVATAR_STYLES.find(s => s.key === selectedStyle)?.label}</p>
+                  <p className="text-xs text-muted-foreground">{AVATAR_STYLES.find(s => s.key === selectedStyle)?.description}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Único para ti, basado en tu nombre</p>
+                </div>
               </div>
-              <div className="grid grid-cols-4 gap-2">
-                {AVATAR_OPTIONS.map((a) => (
+              <div className="grid grid-cols-5 gap-2">
+                {AVATAR_STYLES.map((style) => (
                   <button
-                    key={a.key}
+                    key={style.key}
                     type="button"
-                    onClick={() => setAvatarKey(a.key)}
-                    title={a.label}
-                    className={`flex flex-col items-center gap-1 rounded-xl p-2 border-2 transition-all ${
-                      avatarKey === a.key
+                    onClick={() => setSelectedStyle(style.key)}
+                    title={style.label}
+                    className={`flex flex-col items-center gap-1 rounded-xl p-1.5 border-2 transition-all ${
+                      selectedStyle === style.key
                         ? 'border-primary bg-primary/10 scale-105'
-                        : 'border-border hover:border-primary/50'
+                        : 'border-border hover:border-primary/40'
                     }`}
                   >
-                    <UserAvatar avatarKey={a.key} size={40} />
-                    <span className="text-[10px] text-muted-foreground leading-tight text-center">{a.label}</span>
+                    <img
+                      src={buildAvatarUrl(seed, style.key)}
+                      alt={style.label}
+                      width={44}
+                      height={44}
+                      className="rounded-full bg-muted"
+                    />
+                    <span className="text-[9px] text-muted-foreground leading-tight text-center">{style.label}</span>
                   </button>
                 ))}
               </div>
