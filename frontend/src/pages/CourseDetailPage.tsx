@@ -62,9 +62,15 @@ export default function CourseDetailPage() {
 
   const updateProgressMutation = useMutation({
     mutationFn: async (done: number) => {
-      if (isOnline) {
-        return progressService.updateProgress(courseId!, done);
-      } else {
+      try {
+        if (isOnline) {
+          await progressService.updateProgress(courseId!, done);
+        } else {
+          offlineSyncService.enqueueProgressUpdate(courseId!, done);
+        }
+        return Promise.resolve();
+      } catch (err) {
+        // Fallback to offline queue if network request fails despite isOnline being true
         offlineSyncService.enqueueProgressUpdate(courseId!, done);
         return Promise.resolve();
       }
@@ -87,10 +93,16 @@ export default function CourseDetailPage() {
 
   const submitQuizMutation = useMutation({
     mutationFn: async ({ questionId, selectedAnswer, isCorrect }: { questionId: string; selectedAnswer: number; isCorrect: boolean }) => {
-      if (isOnline) {
-        const res = await coursesService.submitQuiz(courseId!, activeLesson.id, questionId, selectedAnswer);
-        return { isCorrect: res.isCorrect };
-      } else {
+      try {
+        if (isOnline) {
+          const res = await coursesService.submitQuiz(courseId!, activeLesson.id, questionId, selectedAnswer);
+          return { isCorrect: res.isCorrect };
+        } else {
+          offlineSyncService.enqueueQuizSubmission(courseId!, activeLesson.id, questionId, selectedAnswer);
+          return { isCorrect };
+        }
+      } catch (err) {
+        // Fallback to offline queue if network request fails despite isOnline being true
         offlineSyncService.enqueueQuizSubmission(courseId!, activeLesson.id, questionId, selectedAnswer);
         return { isCorrect };
       }
