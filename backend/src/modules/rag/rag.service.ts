@@ -4,7 +4,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { PrismaService } from '../../prisma/prisma.service';
 
 const EMBED_DIMS = 768;
-const EMBED_MODEL = 'text-embedding-004';
+const EMBED_MODEL = 'embedding-001';
 
 @Injectable()
 export class RagService implements OnModuleInit {
