@@ -6,6 +6,8 @@ import { SiteHeader } from '../components/layout/SiteHeader';
 import { AndeanBorder } from '../components/layout/AndeanBorder';
 import { useAuthStore } from '../store/auth.store';
 import { usersService, notificationsService } from '../services/courses.service';
+import { AVATAR_OPTIONS } from '../lib/avatars';
+import { UserAvatar } from '../components/avatar/UserAvatar';
 
 export default function ProfilePage() {
   const { user, setUser } = useAuthStore();
@@ -13,6 +15,7 @@ export default function ProfilePage() {
 
   const [displayName, setDisplayName] = useState(user?.displayName ?? '');
   const [community, setCommunity] = useState(user?.community ?? '');
+  const [avatarKey, setAvatarKey] = useState(user?.avatarUrl ?? 'estudiante');
 
   const { data: notifData } = useQuery({
     queryKey: ['notifications'],
@@ -27,7 +30,7 @@ export default function ProfilePage() {
   const notifications = notifData?.data ?? notifData ?? [];
 
   const updateMutation = useMutation({
-    mutationFn: () => usersService.update(user!.id, { displayName, community }),
+    mutationFn: () => usersService.update(user!.id, { displayName, community, avatarUrl: avatarKey }),
     onSuccess: (updated) => {
       setUser({ ...user!, ...updated });
       toast.success('Perfil actualizado');
@@ -58,6 +61,35 @@ export default function ProfilePage() {
             <User className="h-6 w-6 text-primary" /> Información personal
           </h2>
           <div className="space-y-4">
+            {/* Avatar picker */}
+            <div>
+              <label className="mb-2 block text-sm font-bold">Tu avatar</label>
+              <div className="flex items-center gap-3 mb-3">
+                <UserAvatar avatarKey={avatarKey} size={56} />
+                <span className="text-sm text-muted-foreground">
+                  {AVATAR_OPTIONS.find(a => a.key === avatarKey)?.label}
+                </span>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {AVATAR_OPTIONS.map((a) => (
+                  <button
+                    key={a.key}
+                    type="button"
+                    onClick={() => setAvatarKey(a.key)}
+                    title={a.label}
+                    className={`flex flex-col items-center gap-1 rounded-xl p-2 border-2 transition-all ${
+                      avatarKey === a.key
+                        ? 'border-primary bg-primary/10 scale-105'
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                  >
+                    <UserAvatar avatarKey={a.key} size={40} />
+                    <span className="text-[10px] text-muted-foreground leading-tight text-center">{a.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div>
               <label className="mb-1.5 block text-sm font-bold">DNI</label>
               <input value={user?.dni} disabled

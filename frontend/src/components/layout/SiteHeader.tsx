@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Sun, Menu, X, Bell, User, LogOut, LayoutDashboard, PlayCircle, WifiOff } from 'lucide-react';
+import { UserAvatar } from '../avatar/UserAvatar';
 import { useAuthStore } from '../../store/auth.store';
 import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { useI18nStore, type Lang, LANG_NAMES } from '../../store/i18n.store';
@@ -96,7 +97,7 @@ export function SiteHeader() {
                 onClick={() => setUserMenuOpen((v) => !v)}
                 className="flex items-center gap-2 rounded-xl border-2 border-border bg-card px-3 py-2 text-sm font-bold hover:border-primary/50 transition-colors"
               >
-                <User className="h-4 w-4" />
+                <UserAvatar avatarKey={user.avatarUrl} size={28} />
                 <span className="hidden max-w-[120px] truncate md:block">{user.displayName}</span>
               </button>
 
