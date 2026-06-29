@@ -25,7 +25,9 @@ export default function CourseDetailPage() {
   const { user } = useAuthStore();
   const { tr } = useI18nStore();
   const { isOnline } = useNetworkStatus();
-  const { isDownloaded, addDownload, removeDownload } = useDownloadsStore();
+  const userDownloads = useDownloadsStore((state) => user ? state.userDownloads[user.id] : undefined) || [];
+  const { addDownload, removeDownload } = useDownloadsStore();
+  const isCourseDownloaded = userDownloads.includes(courseId!);
   const qc = useQueryClient();
 
   const [activeLesson, setActiveLesson]   = useState<any>(null);
@@ -47,13 +49,28 @@ export default function CourseDetailPage() {
   });
 
   const progressRow  = progress?.rows?.find((r: any) => r.course?.slug === courseId || r.courseId === course?.id);
-  const lessonsDone  = progressRow?.lessonsDone ?? 0;
+  
+  // Combine server progress with any pending offline progress to survive page reloads offline
+  const offlineQueue = offlineSyncService.getQueue();
+  const pendingProgress = offlineQueue.find(
+    (a) => a.type === 'updateProgress' && (a.payload.courseId === courseId || a.payload.courseId === course?.id)
+  );
+  
+  const serverLessonsDone = progressRow?.lessonsDone ?? 0;
+  const offlineLessonsDone = pendingProgress?.payload.lessonsDone ?? 0;
+  const lessonsDone = Math.max(serverLessonsDone, offlineLessonsDone);
 
   const updateProgressMutation = useMutation({
     mutationFn: async (done: number) => {
-      if (isOnline) {
-        return progressService.updateProgress(courseId!, done);
-      } else {
+      try {
+        if (isOnline) {
+          await progressService.updateProgress(courseId!, done);
+        } else {
+          offlineSyncService.enqueueProgressUpdate(courseId!, done);
+        }
+        return Promise.resolve();
+      } catch (err) {
+        // Fallback to offline queue if network request fails despite isOnline being true
         offlineSyncService.enqueueProgressUpdate(courseId!, done);
         return Promise.resolve();
       }
@@ -76,10 +93,16 @@ export default function CourseDetailPage() {
 
   const submitQuizMutation = useMutation({
     mutationFn: async ({ questionId, selectedAnswer, isCorrect }: { questionId: string; selectedAnswer: number; isCorrect: boolean }) => {
-      if (isOnline) {
-        const res = await coursesService.submitQuiz(courseId!, activeLesson.id, questionId, selectedAnswer);
-        return { isCorrect: res.isCorrect };
-      } else {
+      try {
+        if (isOnline) {
+          const res = await coursesService.submitQuiz(courseId!, activeLesson.id, questionId, selectedAnswer);
+          return { isCorrect: res.isCorrect };
+        } else {
+          offlineSyncService.enqueueQuizSubmission(courseId!, activeLesson.id, questionId, selectedAnswer);
+          return { isCorrect };
+        }
+      } catch (err) {
+        // Fallback to offline queue if network request fails despite isOnline being true
         offlineSyncService.enqueueQuizSubmission(courseId!, activeLesson.id, questionId, selectedAnswer);
         return { isCorrect };
       }
@@ -511,7 +534,7 @@ export default function CourseDetailPage() {
                 <Link to={`/foros/${courseId}`} className="inline-flex items-center gap-2 rounded-2xl border-2 border-border px-5 py-2.5 font-bold hover:bg-muted transition-colors">
                   <MessageSquare className="h-4 w-4" /> {tr('goForum')}
                 </Link>
-                {user && isDownloaded(user.id, courseId!) ? (
+                {user && isCourseDownloaded ? (
                   <button
                     onClick={handleRemoveDownload}
                     className="inline-flex items-center gap-2 rounded-2xl bg-primary/10 text-primary px-5 py-2.5 font-bold hover:bg-destructive/10 hover:text-destructive transition-colors group"
