@@ -49,7 +49,16 @@ export default function CourseDetailPage() {
   });
 
   const progressRow  = progress?.rows?.find((r: any) => r.course?.slug === courseId || r.courseId === course?.id);
-  const lessonsDone  = progressRow?.lessonsDone ?? 0;
+  
+  // Combine server progress with any pending offline progress to survive page reloads offline
+  const offlineQueue = offlineSyncService.getQueue();
+  const pendingProgress = offlineQueue.find(
+    (a) => a.type === 'updateProgress' && (a.payload.courseId === courseId || a.payload.courseId === course?.id)
+  );
+  
+  const serverLessonsDone = progressRow?.lessonsDone ?? 0;
+  const offlineLessonsDone = pendingProgress?.payload.lessonsDone ?? 0;
+  const lessonsDone = Math.max(serverLessonsDone, offlineLessonsDone);
 
   const updateProgressMutation = useMutation({
     mutationFn: async (done: number) => {
