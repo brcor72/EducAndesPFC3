@@ -6,8 +6,8 @@ import { SiteHeader } from '../components/layout/SiteHeader';
 import { AndeanBorder } from '../components/layout/AndeanBorder';
 import { useAuthStore } from '../store/auth.store';
 import { usersService, notificationsService } from '../services/courses.service';
-import { buildAvatarUrl, ACTIVITY_OPTIONS } from '../lib/avatars';
-import { UserAvatar } from '../components/avatar/UserAvatar';
+import { ACTIVITY_OPTIONS } from '../lib/avatars';
+import { AndeanAvatar } from '../components/avatar/AndeanAvatar';
 
 const SKIN_OPTIONS = [
   { value: 'claro',   label: 'Claro',   color: '#f5d5b0' },
@@ -32,8 +32,6 @@ export default function ProfilePage() {
     gender, skinTone, birthYear: birthYear || undefined, activity,
   }), [displayName, gender, skinTone, birthYear, activity, user]);
 
-  const previewUrl = useMemo(() => buildAvatarUrl(profile), [profile]);
-
   const { data: notifData } = useQuery({
     queryKey: ['notifications'],
     queryFn: () => notificationsService.getAll(),
@@ -50,7 +48,6 @@ export default function ProfilePage() {
     mutationFn: () => usersService.update(user!.id, {
       displayName,
       community,
-      avatarUrl: previewUrl,
       gender,
       skinTone,
       birthYear: birthYear !== '' ? Number(birthYear) : undefined,
@@ -89,7 +86,7 @@ export default function ProfilePage() {
 
             {/* Avatar preview */}
             <div className="rounded-2xl bg-muted/40 p-4 flex items-center gap-4">
-              <UserAvatar avatarUrl={previewUrl} profile={profile} size={80}
+              <AndeanAvatar profile={profile} size={80}
                 className="border-4 border-primary/30 shadow-warm" />
               <div>
                 <div className="flex items-center gap-1.5 text-sm font-bold text-primary">

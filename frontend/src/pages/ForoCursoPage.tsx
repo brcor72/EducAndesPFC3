@@ -146,7 +146,7 @@ export default function ForoCursoPage() {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                     <span className="inline-flex items-center gap-2">
-                      <UserAvatar avatarUrl={t.author?.avatarUrl} profile={t.author} size={32} />
+                      <UserAvatar profile={t.author} size={32} />
                       <span className="font-bold text-foreground">{t.author?.displayName ?? 'Aprendiz'}</span>
                       {t.author?.community && <span>· {t.author.community}</span>}
                     </span>
@@ -218,7 +218,7 @@ function ThreadReplies({ threadId, canReply }: { threadId: string; canReply: boo
             <li key={r.id} className="rounded-2xl bg-muted/60 p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <UserAvatar avatarUrl={r.author?.avatarUrl} profile={r.author} size={28} />
+                  <UserAvatar profile={r.author} size={28} />
                   <span className="font-bold text-foreground">{r.author?.displayName ?? 'Aprendiz'}</span>
                   <span>· {timeAgo(r.createdAt)}</span>
                 </div>
