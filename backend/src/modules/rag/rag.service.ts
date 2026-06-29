@@ -1,24 +1,23 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { PrismaService } from '../../prisma/prisma.service';
 
 const EMBED_DIMS = 768;
-const EMBED_MODEL = 'embedding-001';
+// Llamada directa a v1 (estable) en lugar del SDK que usa v1beta
+const EMBED_URL = 'https://generativelanguage.googleapis.com/v1/models/text-embedding-004:embedContent';
 
 @Injectable()
 export class RagService implements OnModuleInit {
   private readonly logger = new Logger(RagService.name);
-  private genAI: GoogleGenerativeAI;
+  private apiKey = '';
   private enabled = false;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
   ) {
-    const apiKey = this.config.get<string>('GOOGLE_AI_API_KEY') ?? '';
-    if (apiKey) {
-      this.genAI = new GoogleGenerativeAI(apiKey);
+    this.apiKey = this.config.get<string>('GOOGLE_AI_API_KEY') ?? '';
+    if (this.apiKey) {
       this.enabled = true;
     } else {
       this.logger.warn('GOOGLE_AI_API_KEY no configurada — RAG desactivado');
@@ -27,7 +26,6 @@ export class RagService implements OnModuleInit {
 
   async onModuleInit() {
     try {
-      // Habilitar extensión pgvector y crear tabla de embeddings
       await this.prisma.$executeRawUnsafe(`CREATE EXTENSION IF NOT EXISTS vector`);
       await this.prisma.$executeRawUnsafe(`
         CREATE TABLE IF NOT EXISTS lesson_embeddings (
@@ -45,15 +43,25 @@ export class RagService implements OnModuleInit {
     }
   }
 
-  /** Convierte texto en vector de 768 dimensiones usando Google text-embedding-004 */
+  /** Llama directamente a la API REST v1 de Google (evita el SDK que usa v1beta) */
   async embedText(text: string): Promise<number[]> {
     if (!this.enabled) throw new Error('RAG no habilitado: falta GOOGLE_AI_API_KEY');
-    const model = this.genAI.getGenerativeModel({ model: EMBED_MODEL });
-    const result = await model.embedContent(text);
-    return result.embedding.values;
+
+    const res = await fetch(`${EMBED_URL}?key=${this.apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: { parts: [{ text }] } }),
+    });
+
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`Google Embedding API error ${res.status}: ${err}`);
+    }
+
+    const json: any = await res.json();
+    return json.embedding.values as number[];
   }
 
-  /** Indexa todas las lecciones activas. Llamar una sola vez o al actualizar contenido. */
   async indexAllLessons(): Promise<{ indexed: number; errors: number }> {
     if (!this.enabled) return { indexed: 0, errors: 0 };
 
@@ -84,8 +92,8 @@ export class RagService implements OnModuleInit {
           `INSERT INTO lesson_embeddings (lesson_id, content, embedding)
            VALUES ($1, $2, $3::vector)
            ON CONFLICT (lesson_id) DO UPDATE
-             SET content   = EXCLUDED.content,
-                 embedding = EXCLUDED.embedding,
+             SET content    = EXCLUDED.content,
+                 embedding  = EXCLUDED.embedding,
                  updated_at = NOW()`,
           lesson.id,
           content,
@@ -94,8 +102,6 @@ export class RagService implements OnModuleInit {
 
         indexed++;
         this.logger.log(`Indexado ${indexed}/${lessons.length}: ${lesson.title}`);
-
-        // Pausa mínima para respetar rate-limit de la API gratuita
         await new Promise((r) => setTimeout(r, 150));
       } catch (err: any) {
         errors++;
@@ -106,10 +112,6 @@ export class RagService implements OnModuleInit {
     return { indexed, errors };
   }
 
-  /**
-   * Busca las lecciones más similares semánticamente a la consulta.
-   * Devuelve hasta `limit` resultados ordenados por distancia coseno ascendente.
-   */
   async searchSimilar(
     query: string,
     limit = 3,
@@ -143,7 +145,6 @@ export class RagService implements OnModuleInit {
     }
   }
 
-  /** Devuelve cuántas lecciones están indexadas */
   async indexedCount(): Promise<number> {
     try {
       const result = await this.prisma.$queryRawUnsafe<[{ count: bigint }]>(
