@@ -17,6 +17,7 @@ import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminUsersPage from './pages/admin/AdminUsersPage';
 import AdminCoursesPage from './pages/admin/AdminCoursesPage';
 import NotFoundPage from './pages/NotFoundPage';
+import FaqPage from './pages/FaqPage';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, initialized } = useAuthStore();
@@ -56,6 +57,9 @@ export default function App() {
         {/* Protected */}
         <Route path="/metas" element={<PrivateRoute><MetasPage /></PrivateRoute>} />
         <Route path="/perfil" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
+        
+        {/* Ayuda / FAQ */}
+        <Route path="/ayuda" element={<FaqPage />} />
 
         {/* Admin */}
         <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />

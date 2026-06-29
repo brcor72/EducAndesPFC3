@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Sun, Menu, X, Bell, User, LogOut, LayoutDashboard, PlayCircle } from 'lucide-react';
+import { Sun, Menu, X, Bell, User, LogOut, LayoutDashboard, PlayCircle, WifiOff } from 'lucide-react';
 import { useAuthStore } from '../../store/auth.store';
+import { useNetworkStatus } from '../../hooks/useNetworkStatus';
 import { useI18nStore, type Lang, LANG_NAMES } from '../../store/i18n.store';
 import { useTutorialStore } from '../../store/tutorial.store';
 import { toast } from 'sonner';
@@ -18,6 +19,7 @@ export function SiteHeader() {
   const { user, logout } = useAuthStore();
   const { lang, setLang, tr } = useI18nStore();
   const { openTutorial } = useTutorialStore();
+  const { isOnline } = useNetworkStatus();
   const [menuOpen, setMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
@@ -28,8 +30,15 @@ export function SiteHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b-2 border-border bg-card/95 backdrop-blur-sm">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-3">
+    <>
+      {!isOnline && (
+        <div className="bg-destructive text-destructive-foreground px-4 py-2 text-center text-sm font-bold flex items-center justify-center gap-2">
+          <WifiOff className="h-4 w-4" />
+          {tr('offlineMode') || 'Estás en modo sin conexión. Algunas funciones están limitadas.'}
+        </div>
+      )}
+      <header className="sticky top-0 z-50 border-b-2 border-border bg-card/95 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-3">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-sunrise shadow-warm">
@@ -51,6 +60,9 @@ export function SiteHeader() {
               {tr('navMetas')}
             </Link>
           )}
+          <Link to="/ayuda" className="rounded-xl px-3 py-2 text-sm font-bold hover:bg-muted transition-colors">
+            {tr('navHelp')}
+          </Link>
           <button
             onClick={openTutorial}
             className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-bold text-primary hover:bg-primary/10 transition-colors border-2 border-primary/30"
@@ -149,6 +161,7 @@ export function SiteHeader() {
             <Link to="/cursos" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2 font-bold hover:bg-muted">{tr('navCourses')}</Link>
             <Link to="/foros" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2 font-bold hover:bg-muted">{tr('navForums')}</Link>
             {user && <Link to="/metas" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2 font-bold hover:bg-muted">{tr('navMetas')}</Link>}
+            <Link to="/ayuda" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2 font-bold hover:bg-muted">{tr('navHelp')}</Link>
             <button
               onClick={() => { openTutorial(); setMenuOpen(false); }}
               className="flex items-center gap-1.5 rounded-xl px-3 py-2 font-bold text-primary hover:bg-primary/10"
@@ -172,5 +185,6 @@ export function SiteHeader() {
         </div>
       )}
     </header>
+    </>
   );
 }

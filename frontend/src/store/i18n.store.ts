@@ -238,6 +238,19 @@ const translations: Record<Lang, Record<string, string>> = {
     // Loading / misc
     loading: 'Cargando…',
     courseNotFound: 'Curso no encontrado',
+
+    // Ayuda / FAQ
+    navHelp: 'Ayuda',
+    faqTitle: 'Preguntas Frecuentes',
+    faqSearch: 'Buscar pregunta...',
+    badgeTitle: '¡Felicidades, completaste el curso!',
+    badgeEarned: 'Insignia obtenida',
+    faqQ1: '¿Cómo cambio el idioma?',
+    faqA1: 'Usa el menú superior y selecciona tu idioma.',
+    faqQ2: '¿Cómo funciona la lectura en voz alta?',
+    faqA2: 'Haz clic en el icono de volumen junto al texto.',
+    faqQ3: '¿Los cursos son gratis?',
+    faqA3: 'Sí, todos los cursos son gratuitos.',
   },
 
   qu: {
@@ -444,8 +457,21 @@ const translations: Record<Lang, Record<string, string>> = {
     notFoundDesc: 'Maskasqayki paginaqa mana kanchu.',
     notFoundBack: 'Qallariyman kutiy',
     noCoursesFound: 'Mana kursukuna tarikurqanchu',
-    loading: 'Cargando…',
-    courseNotFound: 'Kursu mana tarikurqanchu',
+    loading: 'Suyaspa…',
+    courseNotFound: 'Kursu mana tarisqachu',
+
+    // Ayuda / FAQ
+    navHelp: 'Yanapay',
+    faqTitle: 'Sapa kuti tapukuykuna',
+    faqSearch: 'Tapukuy maskay...',
+    badgeTitle: '¡Kusikuy, kursuta tukuchinki!',
+    badgeEarned: 'Insignia chaskisqa',
+    faqQ1: '¿Imaynatataq simita tikrani?',
+    faqA1: 'Hawa menú nisqata llamk\'achiy, simiykita akllay.',
+    faqQ2: '¿Imaynatataq rimayta uyarina?',
+    faqA2: 'Qillqapa kinrayninpi kaq volumen icono nisqapi ñit\'iy.',
+    faqQ3: '¿Kursukuna qullqiyuqchu?',
+    faqA3: 'Arí, tukuy kursukuna mana qullqiyuqmi.',
   },
 
   ay: {
@@ -652,8 +678,21 @@ const translations: Record<Lang, Record<string, string>> = {
     notFoundDesc: 'Maskañaxa janiw utjkiti.',
     notFoundBack: 'Qalltawiru kuttaña',
     noCoursesFound: 'Janiw kursunakax utjkiti',
-    loading: 'Cargando…',
-    courseNotFound: 'Kursu janiw utjkiti',
+    loading: 'Suyaskasa…',
+    courseNotFound: 'Kursu janiwa jikxataskiti',
+
+    // Ayuda / FAQ
+    navHelp: 'Yanapt\'a',
+    faqTitle: 'Sapa kuti jiskt\'anaka',
+    faqSearch: 'Jiskt\'a thaqhayaña...',
+    badgeTitle: '¡Kusisiña, kursu tukuyta!',
+    badgeEarned: 'Insignia katuqata',
+    faqQ1: '¿Kunjamsa arusa mayjt\'ayaña?',
+    faqA1: 'Alaxpacha menu uksan aruma ajlliñamawa.',
+    faqQ2: '¿Kunjamsa arsuña uka uñt\'aña?',
+    faqA2: 'Volumen icono uksan ch\'iqhiyañamawa.',
+    faqQ3: '¿Kursunaka qullqiniti?',
+    faqA3: 'Jïsa, taqi kursunaka janiw qullqiniti.',
   },
 
   shp: {
@@ -860,8 +899,21 @@ const translations: Record<Lang, Record<string, string>> = {
     notFoundDesc: 'Maskañaxa janiw utjkiti.',
     notFoundBack: 'Qalltawir kuttaña',
     noCoursesFound: 'Janiw kursokunaxa utjkiti',
-    loading: 'Cargando…',
-    courseNotFound: 'Kurso janiw utjkiti',
+    loading: 'Nenabo…',
+    courseNotFound: 'Kursu bea',
+
+    // Ayuda / FAQ
+    navHelp: 'Akin',
+    faqTitle: 'Jaskati yokatiba',
+    faqSearch: 'Yoka maskati...',
+    badgeTitle: '¡Kikinbires, yau koshai!',
+    badgeEarned: 'Insignia bia',
+    faqQ1: '¿Jawea nuku joi jawen?',
+    faqA1: 'Mewiti uka menu jawen yoka.',
+    faqQ2: '¿Jawea yoka aiba?',
+    faqA2: 'Volumen icono uka yoka.',
+    faqQ3: '¿Kursuba kopiri?',
+    faqA3: 'Ikon, jatíbi kursuba kopima.',
   },
 };
 

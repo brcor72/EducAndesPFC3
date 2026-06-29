@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft, ArrowRight, CheckCircle2, BookOpen,
-  MessageSquare, ClipboardList, Play, Lock, RotateCcw, Trophy,
+  MessageSquare, ClipboardList, Play, Lock, RotateCcw, Trophy, Award,
 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -11,6 +11,7 @@ import { AndeanBorder } from '../components/layout/AndeanBorder';
 import { coursesService, progressService } from '../services/courses.service';
 import { useAuthStore } from '../store/auth.store';
 import { useI18nStore } from '../store/i18n.store';
+import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { SpeakButton } from '../components/audio/SpeakButton';
 import { VirtualTutor } from '../components/tutor/VirtualTutor';
 
@@ -20,6 +21,7 @@ export default function CourseDetailPage() {
   const { courseId } = useParams<{ courseId: string }>();
   const { user } = useAuthStore();
   const { tr } = useI18nStore();
+  const { isOnline } = useNetworkStatus();
   const qc = useQueryClient();
 
   const [activeLesson, setActiveLesson]   = useState<any>(null);
@@ -355,8 +357,9 @@ export default function CourseDetailPage() {
                   </div>
                 </div>
                 <button
+                  disabled={!isOnline}
                   onClick={retryQuiz}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3.5 font-bold text-primary-foreground shadow-warm hover:bg-primary/90 transition-colors"
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-3.5 font-bold text-primary-foreground shadow-warm hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <RotateCcw className="h-4 w-4" /> Intentar de nuevo
                 </button>
@@ -419,6 +422,17 @@ export default function CourseDetailPage() {
                   <div className="h-3 overflow-hidden rounded-full bg-muted">
                     <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${pct}%` }} />
                   </div>
+                  {pct === 100 && (
+                    <div className="mt-4 flex items-center gap-3 rounded-2xl border-2 border-sun/50 bg-sun/10 p-4 animate-in fade-in zoom-in duration-500">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-sun text-sun-foreground shadow-warm">
+                        <Award className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-sun-foreground">{tr('badgeTitle')}</p>
+                        <p className="text-sm text-sun-foreground/80">{tr('badgeEarned')}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
               <div className="mt-6 flex flex-wrap gap-3">
@@ -502,8 +516,9 @@ export default function CourseDetailPage() {
                   {!isLocked && (
                     <div className="flex shrink-0 gap-2">
                       <button
+                        disabled={!isOnline}
                         onClick={() => openLesson(lesson, 'topic')}
-                        className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-colors ${
+                        className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                           isCompleted
                             ? 'border-2 border-border hover:bg-muted'
                             : 'bg-primary text-primary-foreground shadow-warm hover:bg-primary/90'
