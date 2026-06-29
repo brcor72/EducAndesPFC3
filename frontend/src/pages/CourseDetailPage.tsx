@@ -25,7 +25,9 @@ export default function CourseDetailPage() {
   const { user } = useAuthStore();
   const { tr } = useI18nStore();
   const { isOnline } = useNetworkStatus();
-  const { isDownloaded, addDownload, removeDownload } = useDownloadsStore();
+  const userDownloads = useDownloadsStore((state) => user ? state.userDownloads[user.id] : undefined) || [];
+  const { addDownload, removeDownload } = useDownloadsStore();
+  const isCourseDownloaded = userDownloads.includes(courseId!);
   const qc = useQueryClient();
 
   const [activeLesson, setActiveLesson]   = useState<any>(null);
@@ -511,7 +513,7 @@ export default function CourseDetailPage() {
                 <Link to={`/foros/${courseId}`} className="inline-flex items-center gap-2 rounded-2xl border-2 border-border px-5 py-2.5 font-bold hover:bg-muted transition-colors">
                   <MessageSquare className="h-4 w-4" /> {tr('goForum')}
                 </Link>
-                {user && isDownloaded(user.id, courseId!) ? (
+                {user && isCourseDownloaded ? (
                   <button
                     onClick={handleRemoveDownload}
                     className="inline-flex items-center gap-2 rounded-2xl bg-primary/10 text-primary px-5 py-2.5 font-bold hover:bg-destructive/10 hover:text-destructive transition-colors group"

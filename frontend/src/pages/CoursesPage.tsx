@@ -29,7 +29,7 @@ import { useAuthStore } from '../store/auth.store';
 export default function CoursesPage() {
   const { user } = useAuthStore();
   const { tr } = useI18nStore();
-  const { getDownloads } = useDownloadsStore();
+  const userDownloads = useDownloadsStore((state) => user ? state.userDownloads[user.id] : undefined) || [];
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('ALL');
 
@@ -47,8 +47,7 @@ export default function CoursesPage() {
   });
 
   const filtered = courses.filter((c: any) => {
-    const downloadedIds = user ? getDownloads(user.id) : [];
-    if (activeCategory === 'DOWNLOADS' && !downloadedIds.includes(c.id) && !downloadedIds.includes(c.slug)) return false;
+    if (activeCategory === 'DOWNLOADS' && !userDownloads.includes(c.id) && !userDownloads.includes(c.slug)) return false;
     const matchCat = activeCategory === 'ALL' || activeCategory === 'DOWNLOADS' || c.category === activeCategory;
     const matchSearch = !search || c.title.toLowerCase().includes(search.toLowerCase()) || c.short?.toLowerCase().includes(search.toLowerCase());
     return matchCat && matchSearch;
