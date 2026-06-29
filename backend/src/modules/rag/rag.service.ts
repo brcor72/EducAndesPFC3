@@ -2,31 +2,33 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 
-const EMBED_DIMS = 768;
-// Llamada directa a v1 (estable) en lugar del SDK que usa v1beta
-const EMBED_URL = 'https://generativelanguage.googleapis.com/v1/models/text-embedding-004:embedContent';
+const EMBED_DIMS = 384;
+const HF_MODEL = 'sentence-transformers/all-MiniLM-L6-v2';
+const HF_URL = `https://api-inference.huggingface.co/pipeline/feature-extraction/${HF_MODEL}`;
 
 @Injectable()
 export class RagService implements OnModuleInit {
   private readonly logger = new Logger(RagService.name);
-  private apiKey = '';
+  private hfToken = '';
   private enabled = false;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService,
   ) {
-    this.apiKey = this.config.get<string>('GOOGLE_AI_API_KEY') ?? '';
-    if (this.apiKey) {
+    this.hfToken = this.config.get<string>('HF_TOKEN') ?? '';
+    if (this.hfToken) {
       this.enabled = true;
     } else {
-      this.logger.warn('GOOGLE_AI_API_KEY no configurada — RAG desactivado');
+      this.logger.warn('HF_TOKEN no configurada — RAG desactivado');
     }
   }
 
   async onModuleInit() {
     try {
       await this.prisma.$executeRawUnsafe(`CREATE EXTENSION IF NOT EXISTS vector`);
+      // Recrear tabla si la dimensión cambió
+      await this.prisma.$executeRawUnsafe(`DROP TABLE IF EXISTS lesson_embeddings`);
       await this.prisma.$executeRawUnsafe(`
         CREATE TABLE IF NOT EXISTS lesson_embeddings (
           id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -37,29 +39,34 @@ export class RagService implements OnModuleInit {
           updated_at  TIMESTAMPTZ DEFAULT NOW()
         )
       `);
-      this.logger.log('Tabla lesson_embeddings lista');
+      this.logger.log('Tabla lesson_embeddings lista (384 dims, HuggingFace)');
     } catch (err: any) {
       this.logger.error('Error inicializando RAG: ' + err?.message);
     }
   }
 
-  /** Llama directamente a la API REST v1 de Google (evita el SDK que usa v1beta) */
+  /** Genera embedding de 384 dims usando HuggingFace sentence-transformers (gratis) */
   async embedText(text: string): Promise<number[]> {
-    if (!this.enabled) throw new Error('RAG no habilitado: falta GOOGLE_AI_API_KEY');
+    if (!this.enabled) throw new Error('RAG no habilitado: falta HF_TOKEN');
 
-    const res = await fetch(`${EMBED_URL}?key=${this.apiKey}`, {
+    const res = await fetch(HF_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: { parts: [{ text }] } }),
+      headers: {
+        Authorization: `Bearer ${this.hfToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ inputs: text, options: { wait_for_model: true } }),
     });
 
     if (!res.ok) {
       const err = await res.text();
-      throw new Error(`Google Embedding API error ${res.status}: ${err}`);
+      throw new Error(`HuggingFace API error ${res.status}: ${err}`);
     }
 
     const json: any = await res.json();
-    return json.embedding.values as number[];
+    // El modelo devuelve array de arrays (batch) — tomamos el primero
+    const vector: number[] = Array.isArray(json[0]) ? json[0] : json;
+    return vector;
   }
 
   async indexAllLessons(): Promise<{ indexed: number; errors: number }> {
@@ -102,7 +109,7 @@ export class RagService implements OnModuleInit {
 
         indexed++;
         this.logger.log(`Indexado ${indexed}/${lessons.length}: ${lesson.title}`);
-        await new Promise((r) => setTimeout(r, 150));
+        await new Promise((r) => setTimeout(r, 100));
       } catch (err: any) {
         errors++;
         this.logger.error(`Error indexando lección ${lesson.id}: ${err?.message}`);
