@@ -26,12 +26,12 @@ export default defineConfig({
       workbox: {
         runtimeCaching: [
           {
-            urlPattern: /^\/api\/courses(\/.*)?$/,
+            urlPattern: /^\/api\/v1\/(courses|progress)(\/.*)?$/,
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'educandes-courses-cache',
+              cacheName: 'educandes-api-cache',
               expiration: {
-                maxEntries: 50,
+                maxEntries: 100,
                 maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
               },
               cacheableResponse: {
