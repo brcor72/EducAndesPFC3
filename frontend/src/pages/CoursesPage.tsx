@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Clock, Layers, Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -24,11 +24,22 @@ const CATEGORY_TONE: Record<string, string> = {
   ENERGIA: 'bg-earth text-earth-foreground',
 };
 
+import { useAuthStore } from '../store/auth.store';
+
 export default function CoursesPage() {
+  const { user } = useAuthStore();
   const { tr } = useI18nStore();
-  const { downloadedCourseIds } = useDownloadsStore();
+  const { getDownloads } = useDownloadsStore();
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('ALL');
+
+  useEffect(() => {
+    if (window.location.hash === '#downloads') {
+      setActiveCategory('DOWNLOADS');
+      // Limpiar hash para no estancar la URL
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }, []);
 
   const { data: courses = [], isLoading } = useQuery({
     queryKey: ['courses'],
@@ -36,7 +47,8 @@ export default function CoursesPage() {
   });
 
   const filtered = courses.filter((c: any) => {
-    if (activeCategory === 'DOWNLOADS' && !downloadedCourseIds.includes(c.id || c.slug)) return false;
+    const downloadedIds = user ? getDownloads(user.id) : [];
+    if (activeCategory === 'DOWNLOADS' && !downloadedIds.includes(c.id) && !downloadedIds.includes(c.slug)) return false;
     const matchCat = activeCategory === 'ALL' || activeCategory === 'DOWNLOADS' || c.category === activeCategory;
     const matchSearch = !search || c.title.toLowerCase().includes(search.toLowerCase()) || c.short?.toLowerCase().includes(search.toLowerCase());
     return matchCat && matchSearch;
