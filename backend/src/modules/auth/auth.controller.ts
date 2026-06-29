@@ -60,7 +60,7 @@ export class AuthController {
   @Get('me')
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Obtener perfil del usuario autenticado' })
-  getProfile(@CurrentUser('sub') userId: string) {
+  getProfile(@CurrentUser('id') userId: string) {
     return this.authService.getProfile(userId);
   }
 }
