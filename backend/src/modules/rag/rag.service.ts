@@ -32,7 +32,7 @@ export class RagService implements OnModuleInit {
       await this.prisma.$executeRawUnsafe(`
         CREATE TABLE IF NOT EXISTS lesson_embeddings (
           id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-          lesson_id   UUID NOT NULL UNIQUE REFERENCES lessons(id) ON DELETE CASCADE,
+          lesson_id   TEXT NOT NULL UNIQUE REFERENCES lessons(id) ON DELETE CASCADE,
           content     TEXT NOT NULL,
           embedding   vector(${EMBED_DIMS}),
           created_at  TIMESTAMPTZ DEFAULT NOW(),
