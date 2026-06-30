@@ -169,9 +169,9 @@ model Lesson {
   index    Int
 
   title      String  @db.VarChar(200)
-  titleQu    String? @db.VarChar(200)
-  titleAy    String? @db.VarChar(200)
-  titleShp   String? @db.VarChar(200)
+  titleQu    String? @db.Text
+  titleAy    String? @db.Text
+  titleShp   String? @db.Text
 
   summary    String  @db.VarChar(400)
   summaryQu  String? @db.Text
