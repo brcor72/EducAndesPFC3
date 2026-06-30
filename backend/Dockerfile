@@ -37,4 +37,4 @@ USER appuser
 EXPOSE 3001
 
 # Ejecutar migraciones y arrancar (seed se ejecuta manualmente desde Railway)
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main || node dist/main"]
+CMD ["sh", "-c", "npx prisma db execute --file prisma/fix_columns.sql --schema prisma/schema.prisma; npx prisma migrate resolve --rolled-back 20260630000002_summary_translations_to_text 2>/dev/null; npx prisma migrate resolve --rolled-back 20260630000003_title_translations_to_text 2>/dev/null; npx prisma migrate deploy && node dist/main || node dist/main"]
