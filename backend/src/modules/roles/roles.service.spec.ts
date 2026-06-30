@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { NotFoundException } from '@nestjs/common';
 import { RolesService } from './roles.service';
 import { PrismaService } from '../../prisma/prisma.service';
 
@@ -60,12 +61,12 @@ describe('RolesService', () => {
       expect(result).toEqual({ id: 'u1', roleId: 'r1' });
     });
 
-    it('lanza error y no actualiza si el rol no existe', async () => {
+    it('lanza NotFoundException y no actualiza si el rol no existe', async () => {
       prisma.role.findUnique.mockResolvedValue(null);
 
       await expect(
         service.assignRoleToUser('u1', 'NO_EXISTE'),
-      ).rejects.toThrow('Rol no encontrado');
+      ).rejects.toThrow(NotFoundException);
       expect(prisma.user.update).not.toHaveBeenCalled();
     });
   });
