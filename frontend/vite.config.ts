@@ -24,6 +24,8 @@ export default defineConfig({
         ]
       },
       workbox: {
+        clientsClaim: true,
+        skipWaiting: true,
         runtimeCaching: [
           {
             urlPattern: /^\/api\/v1\/(courses|progress)(\/.*)?$/,
