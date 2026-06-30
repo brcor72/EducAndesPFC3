@@ -135,8 +135,11 @@ model Course {
   title         String         @db.VarChar(200)
   titleQu       String?        @db.VarChar(200)
   titleAy       String?        @db.VarChar(200)
+  titleShp      String?        @db.VarChar(200)
   short         String         @db.VarChar(300)
   shortQu       String?        @db.VarChar(300)
+  shortAy       String?        @db.VarChar(300)
+  shortShp      String?        @db.VarChar(300)
   long          String         @db.Text
   imageUrl      String?        @db.VarChar(500)
   iconName      String?        @db.VarChar(50)
@@ -165,9 +168,20 @@ model Lesson {
   course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
   index    Int
 
-  title    String @db.VarChar(200)
-  summary  String @db.VarChar(400)
-  detail   String @db.Text
+  title      String  @db.VarChar(200)
+  titleQu    String? @db.VarChar(200)
+  titleAy    String? @db.VarChar(200)
+  titleShp   String? @db.VarChar(200)
+
+  summary    String  @db.VarChar(400)
+  summaryQu  String? @db.VarChar(400)
+  summaryAy  String? @db.VarChar(400)
+  summaryShp String? @db.VarChar(400)
+
+  detail     String  @db.Text
+  detailQu   String? @db.Text
+  detailAy   String? @db.Text
+  detailShp  String? @db.Text
 
   isPractice       Boolean @default(false)
   practiceTitle    String? @db.VarChar(200)

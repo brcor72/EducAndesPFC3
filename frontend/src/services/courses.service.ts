@@ -1,8 +1,14 @@
 import api from './api';
+import { useI18nStore } from '../store/i18n.store';
+
+function getLang() {
+  return useI18nStore.getState().lang;
+}
 
 export const coursesService = {
   async getAll(category?: string) {
-    const params = category ? { category } : {};
+    const params: any = { lang: getLang() };
+    if (category) params.category = category;
     const { data } = await api.get('/courses', { params });
     return data.data as any[];
   },
@@ -13,17 +19,17 @@ export const coursesService = {
   },
 
   async getOne(slug: string) {
-    const { data } = await api.get(`/courses/${slug}`);
+    const { data } = await api.get(`/courses/${slug}`, { params: { lang: getLang() } });
     return data.data;
   },
 
   async getLessons(courseId: string) {
-    const { data } = await api.get(`/courses/${courseId}/lessons`);
+    const { data } = await api.get(`/courses/${courseId}/lessons`, { params: { lang: getLang() } });
     return data.data as any[];
   },
 
   async getLesson(courseId: string, index: number) {
-    const { data } = await api.get(`/courses/${courseId}/lessons/${index}`);
+    const { data } = await api.get(`/courses/${courseId}/lessons/${index}`, { params: { lang: getLang() } });
     return data.data;
   },
 
@@ -128,5 +134,17 @@ export const usersService = {
   async getStats() {
     const { data } = await api.get('/users/me/stats');
     return data.data;
+  },
+};
+
+export const translationsService = {
+  async getStatus() {
+    const { data } = await api.get('/translations/status');
+    return data;
+  },
+
+  async translateAll(lang: 'qu' | 'ay' | 'shp') {
+    const { data } = await api.post(`/translations/translate-all/${lang}`);
+    return data;
   },
 };

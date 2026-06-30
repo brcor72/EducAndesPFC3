@@ -2,26 +2,29 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
+import { applyLangToCourse, applyLangToLesson } from '../../common/utils/pick-lang';
 
 @Injectable()
 export class CoursesService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(category?: string, published = true) {
+  async findAll(category?: string, published = true, lang = 'es') {
     const where: any = { deletedAt: null };
     if (published) where.isPublished = true;
     if (category) where.category = category.toUpperCase();
 
-    return this.prisma.course.findMany({
+    const courses = await this.prisma.course.findMany({
       where,
       orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
       include: {
         _count: { select: { lessons: { where: { deletedAt: null } }, forumThreads: { where: { deletedAt: null } } } },
       },
     });
+
+    return courses.map((c) => applyLangToCourse(c, lang));
   }
 
-  async findOne(slugOrId: string) {
+  async findOne(slugOrId: string, lang = 'es') {
     const course = await this.prisma.course.findFirst({
       where: {
         OR: [{ slug: slugOrId }, { id: slugOrId }],
@@ -41,7 +44,7 @@ export class CoursesService {
     });
 
     if (!course) throw new NotFoundException('Curso no encontrado');
-    return course;
+    return applyLangToCourse(course, lang);
   }
 
   async create(dto: CreateCourseDto) {
@@ -61,9 +64,9 @@ export class CoursesService {
     return { message: 'Curso eliminado correctamente' };
   }
 
-  async getCoursesWithProgress(userId: string) {
+  async getCoursesWithProgress(userId: string, lang = 'es') {
     const [courses, progress] = await Promise.all([
-      this.findAll(),
+      this.findAll(undefined, true, lang),
       this.prisma.courseProgress.findMany({ where: { userId } }),
     ]);
 

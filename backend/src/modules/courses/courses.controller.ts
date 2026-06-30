@@ -21,22 +21,34 @@ export class CoursesController {
   @Public()
   @ApiOperation({ summary: 'Listar cursos publicados' })
   @ApiQuery({ name: 'category', required: false })
-  findAll(@Query('category') category?: string) {
-    return this.coursesService.findAll(category);
+  @ApiQuery({ name: 'lang', required: false, enum: ['es', 'qu', 'ay', 'shp'] })
+  findAll(
+    @Query('category') category?: string,
+    @Query('lang') lang?: string,
+    @CurrentUser() user?: any,
+  ) {
+    const resolvedLang = lang ?? user?.preferredLang ?? 'es';
+    return this.coursesService.findAll(category, true, resolvedLang);
   }
 
   @Get('with-progress')
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Cursos con progreso del usuario autenticado' })
-  getWithProgress(@CurrentUser('id') userId: string) {
-    return this.coursesService.getCoursesWithProgress(userId);
+  getWithProgress(@CurrentUser() user: any) {
+    return this.coursesService.getCoursesWithProgress(user.id, user.preferredLang ?? 'es');
   }
 
   @Get(':slug')
   @Public()
   @ApiOperation({ summary: 'Obtener curso por slug o ID' })
-  findOne(@Param('slug') slug: string) {
-    return this.coursesService.findOne(slug);
+  @ApiQuery({ name: 'lang', required: false, enum: ['es', 'qu', 'ay', 'shp'] })
+  findOne(
+    @Param('slug') slug: string,
+    @Query('lang') lang?: string,
+    @CurrentUser() user?: any,
+  ) {
+    const resolvedLang = lang ?? user?.preferredLang ?? 'es';
+    return this.coursesService.findOne(slug, resolvedLang);
   }
 
   @Post()

@@ -14,6 +14,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { TutorModule } from './modules/tutor/tutor.module';
 import { RagModule } from './modules/rag/rag.module';
+import { TranslationsModule } from './modules/translations/translations.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { RagModule } from './modules/rag/rag.module';
     AuditModule,
     TutorModule,
     RagModule,
+    TranslationsModule,
   ],
 })
 export class AppModule {}

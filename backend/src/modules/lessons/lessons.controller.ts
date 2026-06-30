@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, ParseIntPipe, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query, ParseIntPipe, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { LessonsService } from './lessons.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -14,8 +14,12 @@ export class LessonsController {
   @Get()
   @Public()
   @ApiOperation({ summary: 'Listar lecciones de un curso' })
-  findAll(@Param('courseId') courseId: string) {
-    return this.lessonsService.findByCourse(courseId);
+  findAll(
+    @Param('courseId') courseId: string,
+    @Query('lang') lang?: string,
+    @CurrentUser() user?: any,
+  ) {
+    return this.lessonsService.findByCourse(courseId, lang ?? user?.preferredLang ?? 'es');
   }
 
   @Get(':index')
@@ -24,8 +28,10 @@ export class LessonsController {
   findOne(
     @Param('courseId') courseId: string,
     @Param('index', ParseIntPipe) index: number,
+    @Query('lang') lang?: string,
+    @CurrentUser() user?: any,
   ) {
-    return this.lessonsService.findOne(courseId, index);
+    return this.lessonsService.findOne(courseId, index, lang ?? user?.preferredLang ?? 'es');
   }
 
   @Post(':lessonId/quiz/submit')
