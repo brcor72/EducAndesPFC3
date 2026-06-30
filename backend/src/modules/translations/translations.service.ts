@@ -59,17 +59,22 @@ The audience is rural Andean community members learning about technology and agr
     };
   }
 
-  async translateAll(lang: 'qu' | 'ay' | 'shp'): Promise<{ translated: number; errors: number }> {
-    const titleField   = `title${lang.charAt(0).toUpperCase() + lang.slice(1)}` as any;
-    const summaryField = `summary${lang.charAt(0).toUpperCase() + lang.slice(1)}` as any;
-    const detailField  = `detail${lang.charAt(0).toUpperCase() + lang.slice(1)}` as any;
+  async translateAll(
+    lang: 'qu' | 'ay' | 'shp',
+    batch = 10,
+  ): Promise<{ translated: number; errors: number; remaining: number }> {
+    const suffix      = lang.charAt(0).toUpperCase() + lang.slice(1);
+    const titleField   = `title${suffix}` as any;
+    const summaryField = `summary${suffix}` as any;
+    const detailField  = `detail${suffix}` as any;
 
     const lessons = await this.prisma.lesson.findMany({
       where: { deletedAt: null, [titleField]: null },
       select: { id: true, title: true, summary: true, detail: true },
+      take: batch,
     });
 
-    this.logger.log(`Traduciendo ${lessons.length} lecciones al ${lang}...`);
+    this.logger.log(`Traduciendo ${lessons.length} lecciones al ${lang} (batch ${batch})...`);
 
     let translated = 0;
     let errors = 0;
@@ -84,25 +89,24 @@ The audience is rural Andean community members learning about technology and agr
 
         await this.prisma.lesson.update({
           where: { id: lesson.id },
-          data: {
-            [titleField]:   title,
-            [summaryField]: summary,
-            [detailField]:  detail,
-          },
+          data: { [titleField]: title, [summaryField]: summary, [detailField]: detail },
         });
 
         translated++;
-        this.logger.log(`[${lang}] ${translated}/${lessons.length} - ${lesson.title}`);
+        this.logger.log(`[${lang}] ${lesson.title}`);
       } catch (err) {
         errors++;
         this.logger.error(`Error traduciendo lección ${lesson.id}: ${err}`);
       }
     }
 
-    // Also translate courses missing this language
-    await this.translateCourses(lang);
+    // Translate courses only when all lessons are done
+    const remaining = await this.prisma.lesson.count({
+      where: { deletedAt: null, [titleField]: null },
+    });
+    if (remaining === 0) await this.translateCourses(lang);
 
-    return { translated, errors };
+    return { translated, errors, remaining };
   }
 
   private async translateCourses(lang: 'qu' | 'ay' | 'shp') {
