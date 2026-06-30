@@ -174,9 +174,9 @@ model Lesson {
   titleShp   String? @db.VarChar(200)
 
   summary    String  @db.VarChar(400)
-  summaryQu  String? @db.VarChar(400)
-  summaryAy  String? @db.VarChar(400)
-  summaryShp String? @db.VarChar(400)
+  summaryQu  String? @db.Text
+  summaryAy  String? @db.Text
+  summaryShp String? @db.Text
 
   detail     String  @db.Text
   detailQu   String? @db.Text

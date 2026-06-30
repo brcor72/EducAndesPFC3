@@ -21,24 +21,38 @@ export class TranslationsService {
     this.groq = new Groq({ apiKey: this.config.get<string>('GROQ_API_KEY') ?? '' });
   }
 
-  private async translateText(text: string, targetLang: string): Promise<string> {
+  private async translateText(text: string, targetLang: string, retries = 3): Promise<string> {
     const langDesc = LANG_NAMES[targetLang];
-    const completion = await this.groq.chat.completions.create({
-      model: 'llama-3.1-8b-instant',
-      messages: [
-        {
-          role: 'system',
-          content: `You are an expert translator. Translate the following educational text to ${langDesc}.
+    for (let attempt = 0; attempt < retries; attempt++) {
+      try {
+        const completion = await this.groq.chat.completions.create({
+          model: 'llama-3.1-8b-instant',
+          messages: [
+            {
+              role: 'system',
+              content: `You are an expert translator. Translate the following educational text to ${langDesc}.
 Return ONLY the translated text, no explanations, no quotes, no additional content.
 Preserve technical terms in Spanish if there is no natural equivalent.
 The audience is rural Andean community members learning about technology and agriculture.`,
-        },
-        { role: 'user', content: text },
-      ],
-      temperature: 0.3,
-      max_tokens: 1024,
-    });
-    return completion.choices[0]?.message?.content?.trim() ?? text;
+            },
+            { role: 'user', content: text },
+          ],
+          temperature: 0.3,
+          max_tokens: 2048,
+        });
+        return completion.choices[0]?.message?.content?.trim() ?? text;
+      } catch (err: any) {
+        const is429 = err?.status === 429 || String(err).includes('429');
+        if (is429 && attempt < retries - 1) {
+          const wait = (attempt + 1) * 15_000;
+          this.logger.warn(`Rate limit hit, esperando ${wait / 1000}s antes de reintentar...`);
+          await new Promise(r => setTimeout(r, wait));
+        } else {
+          throw err;
+        }
+      }
+    }
+    return text;
   }
 
   async getStatus() {
@@ -61,7 +75,7 @@ The audience is rural Andean community members learning about technology and agr
 
   async translateAll(
     lang: 'qu' | 'ay' | 'shp',
-    batch = 10,
+    batch = 3,
   ): Promise<{ translated: number; errors: number; remaining: number; lastError?: string }> {
     const suffix      = lang.charAt(0).toUpperCase() + lang.slice(1);
     const titleField   = `title${suffix}` as any;
@@ -82,11 +96,9 @@ The audience is rural Andean community members learning about technology and agr
 
     for (const lesson of lessons) {
       try {
-        const [title, summary, detail] = await Promise.all([
-          this.translateText(lesson.title, lang),
-          this.translateText(lesson.summary, lang),
-          this.translateText(lesson.detail, lang),
-        ]);
+        const title   = await this.translateText(lesson.title, lang);
+        const summary = await this.translateText(lesson.summary, lang);
+        const detail  = await this.translateText(lesson.detail, lang);
 
         await this.prisma.lesson.update({
           where: { id: lesson.id },
