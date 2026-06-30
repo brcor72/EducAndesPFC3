@@ -103,17 +103,25 @@ export default function CourseDetailPage() {
       }
     },
     onSuccess: (data, done) => {
-      if (isOnline) qc.invalidateQueries({ queryKey: ['progress'] });
-      else {
-        qc.setQueryData(['progress'], (old: any) => {
-          if (!old) return old;
-          const newRows = old.rows?.map((r: any) =>
-            (r.course?.slug === courseId || r.courseId === course?.id)
-              ? { ...r, lessonsDone: Math.max(r.lessonsDone, done) }
-              : r
-          );
-          return { ...old, rows: newRows || [] };
+      // Optimistically update the cache so the UI rerenders and unlocks the next lesson
+      qc.setQueryData(['progress'], (old: any) => {
+        if (!old) return old;
+        let found = false;
+        const newRows = old.rows?.map((r: any) => {
+          if (r.course?.slug === courseId || r.courseId === course?.id) {
+            found = true;
+            return { ...r, lessonsDone: Math.max(r.lessonsDone, done) };
+          }
+          return r;
         });
+        if (!found) {
+          newRows.push({ courseId, lessonsDone: done, course: { slug: courseId } });
+        }
+        return { ...old, rows: newRows || [] };
+      });
+      // If online, also invalidate to ensure server sync
+      if (isOnline) {
+        qc.invalidateQueries({ queryKey: ['progress'] });
       }
     },
   });
