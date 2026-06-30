@@ -32,8 +32,25 @@ export default function CourseDetailPage() {
 
   const [activeLesson, setActiveLesson]   = useState<any>(null);
   const [lessonView, setLessonView]       = useState<LessonView>('list');
-  const [quizAnswers, setQuizAnswers]     = useState<Record<string, number | null>>({});
-  const [quizResults, setQuizResults]     = useState<Record<string, boolean>>({});
+  const [quizAnswers, setQuizAnswers] = useState<Record<string, number | null>>(() => {
+    try {
+      const stored = localStorage.getItem(`quizAnswers_${courseId}`);
+      return stored ? JSON.parse(stored) : {};
+    } catch { return {}; }
+  });
+  const [quizResults, setQuizResults] = useState<Record<string, boolean>>(() => {
+    try {
+      const stored = localStorage.getItem(`quizResults_${courseId}`);
+      return stored ? JSON.parse(stored) : {};
+    } catch { return {}; }
+  });
+
+  useEffect(() => {
+    if (courseId) {
+      localStorage.setItem(`quizAnswers_${courseId}`, JSON.stringify(quizAnswers));
+      localStorage.setItem(`quizResults_${courseId}`, JSON.stringify(quizResults));
+    }
+  }, [quizAnswers, quizResults, courseId]);
   const [isDownloading, setIsDownloading] = useState(false);
   const completionFiredRef                = useRef(false);
 

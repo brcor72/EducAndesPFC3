@@ -73,8 +73,13 @@ export const useAuthStore = create<AuthState>()(
         try {
           const user = await authService.getMe();
           set({ user, initialized: true });
-        } catch {
-          set({ user: null, initialized: true });
+        } catch (err: any) {
+          // If network error, keep persisted user. If 401 Unauthorized, log out.
+          if (err.response?.status === 401) {
+            set({ user: null, initialized: true });
+          } else {
+            set({ initialized: true });
+          }
         } finally {
           set({ loading: false });
         }

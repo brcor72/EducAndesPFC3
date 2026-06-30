@@ -17,10 +17,9 @@ export function VirtualTutor({ defaultOpen = false, ...chatProps }: VirtualTutor
     <div className={`rounded-3xl border-2 shadow-soft overflow-hidden transition-all ${isOnline ? 'border-primary/30 bg-gradient-to-br from-amber-50/60 to-emerald-50/40' : 'border-border/50 bg-muted/20 opacity-80'}`}>
       {/* Toggle header */}
       <button
-        disabled={!isOnline}
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between px-6 py-4 hover:bg-primary/5 transition-colors disabled:cursor-not-allowed"
-        aria-expanded={open && isOnline}
+        className="flex w-full items-center justify-between px-6 py-4 hover:bg-primary/5 transition-colors"
+        aria-expanded={open}
       >
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-warm">
@@ -44,7 +43,7 @@ export function VirtualTutor({ defaultOpen = false, ...chatProps }: VirtualTutor
         </div>
       </button>
 
-      {open && isOnline && (
+      {open && (
         <div className="border-t border-primary/20 px-4 pb-6">
           <TutorChat {...chatProps} />
         </div>
