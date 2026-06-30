@@ -13,13 +13,24 @@ function estimateDays(remaining: number, perDay: number) {
   return Math.ceil(remaining / perDay);
 }
 
+import { useDownloadsStore } from '../store/downloads.store';
+
 export default function MetasPage() {
   const { user } = useAuthStore();
   const { tr, lang } = useI18nStore();
 
   const { data: courses = [] } = useQuery({
-    queryKey: ['courses', lang],
-    queryFn: () => coursesService.getAll(),
+    queryKey: ['courses'],
+    queryFn: async () => {
+      try {
+        if (!navigator.onLine) throw new Error('Offline');
+        return await coursesService.getAll();
+      } catch (err) {
+        // Fallback to locally downloaded courses when offline
+        const offlineCourses = useDownloadsStore.getState().offlineCourses;
+        return Object.values(offlineCourses || {});
+      }
+    },
   });
 
   const { data: progressData, isLoading } = useQuery({

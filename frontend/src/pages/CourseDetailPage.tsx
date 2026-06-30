@@ -38,8 +38,18 @@ export default function CourseDetailPage() {
   const completionFiredRef                = useRef(false);
 
   const { data: course, isLoading } = useQuery({
-    queryKey: ['course', courseId, lang],
-    queryFn: () => coursesService.getOne(courseId!),
+    queryKey: ['course', courseId],
+    queryFn: async () => {
+      try {
+        if (!isOnline) throw new Error('Offline');
+        return await coursesService.getOne(courseId!);
+      } catch (err) {
+        // Fallback to local storage if available
+        const offlineCourse = useDownloadsStore.getState().offlineCourses[courseId!];
+        if (offlineCourse) return offlineCourse;
+        throw err;
+      }
+    },
   });
 
   const { data: progress } = useQuery({
@@ -207,15 +217,18 @@ export default function CourseDetailPage() {
     }
     setIsDownloading(true);
     try {
-      // Fetch all lessons explicitly to cache them via Workbox
+      // Fetch all lessons explicitly to construct the full offline course
+      const fullLessons = [];
       for (const l of lessons) {
-        await coursesService.getLesson(courseId!, l.index);
+        const lessonData = await coursesService.getLesson(courseId!, l.index);
+        fullLessons.push(lessonData);
       }
       
       // Simulate heavy download for 10 seconds as requested
       await new Promise(resolve => setTimeout(resolve, 10000));
       
-      addDownload(user.id, courseId!);
+      const completeCourse = { ...course, lessons: fullLessons };
+      addDownload(user.id, completeCourse);
       toast.success('¡Curso descargado con éxito!', {
         duration: 5000,
         action: {

@@ -42,14 +42,25 @@ export default function CoursesPage() {
   }, []);
 
   const { data: courses = [], isLoading } = useQuery({
-    queryKey: ['courses', lang],
-    queryFn: () => coursesService.getAll(),
+    queryKey: ['courses'],
+    queryFn: async () => {
+      try {
+        if (!navigator.onLine) throw new Error('Offline');
+        return await coursesService.getAll();
+      } catch (err) {
+        // Fallback to locally downloaded courses when offline
+        const offlineCourses = useDownloadsStore.getState().offlineCourses;
+        return Object.values(offlineCourses || {});
+      }
+    },
   });
 
   const filtered = courses.filter((c: any) => {
     if (activeCategory === 'DOWNLOADS' && !userDownloads.includes(c.id) && !userDownloads.includes(c.slug)) return false;
     const matchCat = activeCategory === 'ALL' || activeCategory === 'DOWNLOADS' || c.category === activeCategory;
-    const matchSearch = !search || c.title.toLowerCase().includes(search.toLowerCase()) || c.short?.toLowerCase().includes(search.toLowerCase());
+    const courseTitle = c.title.toLowerCase();
+    const courseShort = c.short.toLowerCase();
+    const matchSearch = !search || courseTitle.includes(search.toLowerCase()) || courseShort.includes(search.toLowerCase());
     return matchCat && matchSearch;
   });
 
