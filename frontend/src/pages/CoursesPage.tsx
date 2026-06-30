@@ -28,7 +28,7 @@ import { useAuthStore } from '../store/auth.store';
 
 export default function CoursesPage() {
   const { user } = useAuthStore();
-  const { tr } = useI18nStore();
+  const { tr, lang } = useI18nStore();
   const userDownloads = useDownloadsStore((state) => user ? state.userDownloads[user.id] : undefined) || [];
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('ALL');
@@ -42,7 +42,7 @@ export default function CoursesPage() {
   }, []);
 
   const { data: courses = [], isLoading } = useQuery({
-    queryKey: ['courses'],
+    queryKey: ['courses', lang],
     queryFn: () => coursesService.getAll(),
   });
 

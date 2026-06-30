@@ -8,9 +8,9 @@ import { coursesService } from '../services/courses.service';
 import { SpeakButton } from '../components/audio/SpeakButton';
 
 export default function HomePage() {
-  const { tr } = useI18nStore();
+  const { tr, lang } = useI18nStore();
   const { data: courses = [] } = useQuery({
-    queryKey: ['courses'],
+    queryKey: ['courses', lang],
     queryFn: () => coursesService.getAll(),
   });
 

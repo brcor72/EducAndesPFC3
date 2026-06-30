@@ -29,7 +29,7 @@ function timeAgo(iso: string) {
 export default function ForoCursoPage() {
   const { courseId } = useParams<{ courseId: string }>();
   const { user } = useAuthStore();
-  const { tr } = useI18nStore();
+  const { tr, lang } = useI18nStore();
   const qc = useQueryClient();
   const [openThreadId, setOpenThreadId] = useState<string | null>(null);
   const [showNew, setShowNew] = useState(false);
@@ -37,7 +37,7 @@ export default function ForoCursoPage() {
   const [newBody, setNewBody] = useState('');
 
   const { data: course } = useQuery({
-    queryKey: ['course', courseId],
+    queryKey: ['course', courseId, lang],
     queryFn: () => coursesService.getOne(courseId!),
   });
 

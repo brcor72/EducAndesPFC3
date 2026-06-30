@@ -23,7 +23,7 @@ export default function CourseDetailPage() {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { tr } = useI18nStore();
+  const { tr, lang } = useI18nStore();
   const { isOnline } = useNetworkStatus();
   const userDownloads = useDownloadsStore((state) => user ? state.userDownloads[user.id] : undefined) || [];
   const { addDownload, removeDownload } = useDownloadsStore();
@@ -38,7 +38,7 @@ export default function CourseDetailPage() {
   const completionFiredRef                = useRef(false);
 
   const { data: course, isLoading } = useQuery({
-    queryKey: ['course', courseId],
+    queryKey: ['course', courseId, lang],
     queryFn: () => coursesService.getOne(courseId!),
   });
 

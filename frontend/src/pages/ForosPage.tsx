@@ -15,9 +15,9 @@ const ICON_MAP: Record<string, string> = {
 };
 
 export default function ForosPage() {
-  const { tr } = useI18nStore();
+  const { tr, lang } = useI18nStore();
   const { data: courses = [], isLoading } = useQuery({
-    queryKey: ['courses'],
+    queryKey: ['courses', lang],
     queryFn: () => coursesService.getAll(),
   });
 

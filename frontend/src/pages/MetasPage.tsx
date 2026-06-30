@@ -15,10 +15,10 @@ function estimateDays(remaining: number, perDay: number) {
 
 export default function MetasPage() {
   const { user } = useAuthStore();
-  const { tr } = useI18nStore();
+  const { tr, lang } = useI18nStore();
 
   const { data: courses = [] } = useQuery({
-    queryKey: ['courses'],
+    queryKey: ['courses', lang],
     queryFn: () => coursesService.getAll(),
   });
 
