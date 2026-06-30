@@ -3,7 +3,8 @@ import { persist } from 'zustand/middleware';
 
 interface DownloadsState {
   userDownloads: Record<string, string[]>;
-  addDownload: (userId: string, courseId: string) => void;
+  offlineCourses: Record<string, any>;
+  addDownload: (userId: string, course: any) => void;
   removeDownload: (userId: string, courseId: string) => void;
   isDownloaded: (userId: string, courseId: string) => boolean;
   getDownloads: (userId: string) => string[];
@@ -13,15 +14,29 @@ export const useDownloadsStore = create<DownloadsState>()(
   persist(
     (set, get) => ({
       userDownloads: {},
-      addDownload: (userId, courseId) =>
+      offlineCourses: {},
+      addDownload: (userId, course) =>
         set((state) => {
+          const courseId = course.slug;
           const userList = state.userDownloads[userId] || [];
-          if (userList.includes(courseId)) return state;
+          if (userList.includes(courseId)) {
+            // Already downloaded, just update the cache
+            return {
+              offlineCourses: {
+                ...state.offlineCourses,
+                [courseId]: course,
+              }
+            };
+          }
           return {
             userDownloads: {
               ...state.userDownloads,
               [userId]: [...userList, courseId],
             },
+            offlineCourses: {
+              ...state.offlineCourses,
+              [courseId]: course,
+            }
           };
         }),
       removeDownload: (userId, courseId) =>

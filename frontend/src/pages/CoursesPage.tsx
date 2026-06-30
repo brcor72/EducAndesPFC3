@@ -8,6 +8,7 @@ import { coursesService } from '../services/courses.service';
 import { useI18nStore } from '../store/i18n.store';
 import { useDownloadsStore } from '../store/downloads.store';
 import { SpeakButton } from '../components/audio/SpeakButton';
+import { getCourseTitle, getCourseShort } from '../utils/course';
 
 const CATEGORY_FILTER_KEYS: Record<string, string> = {
   ALL: 'filterAll',
@@ -42,14 +43,25 @@ export default function CoursesPage() {
   }, []);
 
   const { data: courses = [], isLoading } = useQuery({
-    queryKey: ['courses', lang],
-    queryFn: () => coursesService.getAll(),
+    queryKey: ['courses'],
+    queryFn: async () => {
+      try {
+        if (!navigator.onLine) throw new Error('Offline');
+        return await coursesService.getAll();
+      } catch (err) {
+        // Fallback to locally downloaded courses when offline
+        const offlineCourses = useDownloadsStore.getState().offlineCourses;
+        return Object.values(offlineCourses || {});
+      }
+    },
   });
 
   const filtered = courses.filter((c: any) => {
     if (activeCategory === 'DOWNLOADS' && !userDownloads.includes(c.id) && !userDownloads.includes(c.slug)) return false;
     const matchCat = activeCategory === 'ALL' || activeCategory === 'DOWNLOADS' || c.category === activeCategory;
-    const matchSearch = !search || c.title.toLowerCase().includes(search.toLowerCase()) || c.short?.toLowerCase().includes(search.toLowerCase());
+    const courseTitle = getCourseTitle(c, lang).toLowerCase();
+    const courseShort = getCourseShort(c, lang).toLowerCase();
+    const matchSearch = !search || courseTitle.includes(search.toLowerCase()) || courseShort.includes(search.toLowerCase());
     return matchCat && matchSearch;
   });
 
@@ -125,7 +137,7 @@ export default function CoursesPage() {
                 <div className="relative aspect-[4/3] overflow-hidden bg-muted">
                   <img
                     src={c.imageUrl || 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400'}
-                    alt={c.title}
+                    alt={getCourseTitle(c, lang)}
                     loading="lazy"
                     className="h-full w-full object-cover transition-transform group-hover:scale-105"
                   />
@@ -135,10 +147,10 @@ export default function CoursesPage() {
                 </div>
                 <div className="flex flex-1 flex-col gap-3 p-6">
                   <div className="flex items-start gap-2">
-                    <h3 className="font-display text-xl font-bold leading-tight flex-1">{c.title}</h3>
-                    <SpeakButton text={c.title + '. ' + c.short} />
+                    <h3 className="font-display text-xl font-bold leading-tight flex-1">{getCourseTitle(c, lang)}</h3>
+                    <SpeakButton text={getCourseTitle(c, lang) + '. ' + getCourseShort(c, lang)} />
                   </div>
-                  <p className="flex-1 text-sm text-muted-foreground">{c.short}</p>
+                  <p className="flex-1 text-sm text-muted-foreground">{getCourseShort(c, lang)}</p>
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Clock className="h-3.5 w-3.5" /> {c.durationWeeks} {tr('courseWeeks')}

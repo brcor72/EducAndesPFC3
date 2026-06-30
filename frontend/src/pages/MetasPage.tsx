@@ -7,19 +7,31 @@ import { coursesService, progressService } from '../services/courses.service';
 import { useAuthStore } from '../store/auth.store';
 import { useI18nStore } from '../store/i18n.store';
 import { SpeakButton } from '../components/audio/SpeakButton';
+import { getCourseTitle, getCourseShort } from '../utils/course';
 
 function estimateDays(remaining: number, perDay: number) {
   if (perDay <= 0) return Infinity;
   return Math.ceil(remaining / perDay);
 }
 
+import { useDownloadsStore } from '../store/downloads.store';
+
 export default function MetasPage() {
   const { user } = useAuthStore();
   const { tr, lang } = useI18nStore();
 
   const { data: courses = [] } = useQuery({
-    queryKey: ['courses', lang],
-    queryFn: () => coursesService.getAll(),
+    queryKey: ['courses'],
+    queryFn: async () => {
+      try {
+        if (!navigator.onLine) throw new Error('Offline');
+        return await coursesService.getAll();
+      } catch (err) {
+        // Fallback to locally downloaded courses when offline
+        const offlineCourses = useDownloadsStore.getState().offlineCourses;
+        return Object.values(offlineCourses || {});
+      }
+    },
   });
 
   const { data: progressData, isLoading } = useQuery({
@@ -117,10 +129,10 @@ export default function MetasPage() {
                     </div>
                     <div className="flex-1">
                       <div className="flex items-start gap-2">
-                        <h3 className="font-display text-xl font-bold leading-tight flex-1">{c.title}</h3>
-                        <SpeakButton text={c.title + '. ' + c.short} />
+                        <h3 className="font-display text-xl font-bold leading-tight flex-1">{getCourseTitle(c, lang)}</h3>
+                        <SpeakButton text={getCourseTitle(c, lang) + '. ' + getCourseShort(c, lang)} />
                       </div>
-                      <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{c.short}</p>
+                      <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{getCourseShort(c, lang)}</p>
                     </div>
                     {finished && <Trophy className="h-6 w-6 shrink-0 text-sun" />}
                     {!started && !finished && <Lock className="h-5 w-5 shrink-0 text-muted-foreground" />}

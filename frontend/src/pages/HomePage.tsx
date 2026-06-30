@@ -6,12 +6,24 @@ import { AndeanBorder } from '../components/layout/AndeanBorder';
 import { useI18nStore } from '../store/i18n.store';
 import { coursesService } from '../services/courses.service';
 import { SpeakButton } from '../components/audio/SpeakButton';
+import { getCourseTitle, getCourseShort } from '../utils/course';
+
+import { useDownloadsStore } from '../store/downloads.store';
 
 export default function HomePage() {
   const { tr, lang } = useI18nStore();
   const { data: courses = [] } = useQuery({
-    queryKey: ['courses', lang],
-    queryFn: () => coursesService.getAll(),
+    queryKey: ['courses'],
+    queryFn: async () => {
+      try {
+        if (!navigator.onLine) throw new Error('Offline');
+        return await coursesService.getAll();
+      } catch (err) {
+        // Fallback to locally downloaded courses when offline
+        const offlineCourses = useDownloadsStore.getState().offlineCourses;
+        return Object.values(offlineCourses || {});
+      }
+    },
   });
 
   const featured = courses.slice(0, 3);
@@ -105,14 +117,14 @@ export default function HomePage() {
               >
                 <div className="relative aspect-[4/3] overflow-hidden bg-muted">
                   <img src={c.imageUrl || `https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400`}
-                    alt={c.title} loading="lazy" className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+                    alt={getCourseTitle(c, lang)} loading="lazy" className="h-full w-full object-cover transition-transform group-hover:scale-105" />
                   <div className="absolute left-4 top-4 rounded-full bg-primary px-3 py-1.5 text-sm font-bold text-primary-foreground shadow-warm">
                     {tr('courseTag')}
                   </div>
                 </div>
                 <div className="flex flex-1 flex-col gap-3 p-6">
-                  <h3 className="font-display text-2xl font-bold">{c.title}</h3>
-                  <p className="flex-1 text-muted-foreground">{c.short}</p>
+                  <h3 className="font-display text-2xl font-bold">{getCourseTitle(c, lang)}</h3>
+                  <p className="flex-1 text-muted-foreground">{getCourseShort(c, lang)}</p>
                   <span className="inline-flex items-center gap-1 text-base font-bold text-primary">
                     {tr('startLabel')} <ArrowRight className="h-4 w-4" />
                   </span>
@@ -140,10 +152,10 @@ export default function HomePage() {
                 >
                   <div className="aspect-[4/3] overflow-hidden bg-muted">
                     <img src={c.imageUrl || 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=300'}
-                      alt={c.title} className="h-full w-full object-cover group-hover:scale-105 transition-transform" />
+                      alt={getCourseTitle(c, lang)} className="h-full w-full object-cover group-hover:scale-105 transition-transform" />
                   </div>
                   <div className="p-4">
-                    <div className="font-bold text-sm leading-tight">{c.title}</div>
+                    <div className="font-bold text-sm leading-tight">{getCourseTitle(c, lang)}</div>
                     <div className="mt-1 text-xs text-muted-foreground">{c.durationWeeks} {tr('courseWeeks')}</div>
                   </div>
                 </Link>
