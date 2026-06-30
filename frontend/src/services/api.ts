@@ -24,10 +24,54 @@ const processQueue = (error: any, token: string | null) => {
   queue = [];
 };
 
+const getCacheKey = (config: any) => {
+  if (!config?.url) return null;
+  const url = config.url;
+  const params = config.params ? JSON.stringify(config.params) : '';
+  return `educandes_cache_${url}_${params}`;
+};
+
 api.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    // Auto-cache GET requests
+    if (res.config.method?.toLowerCase() === 'get') {
+      const key = getCacheKey(res.config);
+      if (key) {
+        try {
+          localStorage.setItem(key, JSON.stringify(res.data));
+        } catch (e) {
+          console.warn('Could not cache API response, localStorage might be full');
+        }
+      }
+    }
+    return res;
+  },
   async (error) => {
     const original = error.config;
+    
+    // If it's a network error (no response) and a GET request, try to serve from cache
+    if (!error.response && original?.method?.toLowerCase() === 'get') {
+      const key = getCacheKey(original);
+      if (key) {
+        try {
+          const cached = localStorage.getItem(key);
+          if (cached) {
+            console.log('[Offline Cache] Serving from cache:', original.url);
+            return Promise.resolve({
+              data: JSON.parse(cached),
+              status: 200,
+              statusText: 'OK',
+              headers: {},
+              config: original,
+              isOfflineFallback: true
+            });
+          }
+        } catch (e) {
+          // ignore cache parse errors
+        }
+      }
+    }
+
     if (error.response?.status !== 401 || original._retry) {
       return Promise.reject(error);
     }
