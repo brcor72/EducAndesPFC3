@@ -8,7 +8,6 @@ import { coursesService } from '../services/courses.service';
 import { useI18nStore } from '../store/i18n.store';
 import { useDownloadsStore } from '../store/downloads.store';
 import { SpeakButton } from '../components/audio/SpeakButton';
-import { getCourseTitle, getCourseShort } from '../utils/course';
 
 const CATEGORY_FILTER_KEYS: Record<string, string> = {
   ALL: 'filterAll',
@@ -59,8 +58,8 @@ export default function CoursesPage() {
   const filtered = courses.filter((c: any) => {
     if (activeCategory === 'DOWNLOADS' && !userDownloads.includes(c.id) && !userDownloads.includes(c.slug)) return false;
     const matchCat = activeCategory === 'ALL' || activeCategory === 'DOWNLOADS' || c.category === activeCategory;
-    const courseTitle = getCourseTitle(c, lang).toLowerCase();
-    const courseShort = getCourseShort(c, lang).toLowerCase();
+    const courseTitle = c.title.toLowerCase();
+    const courseShort = c.short.toLowerCase();
     const matchSearch = !search || courseTitle.includes(search.toLowerCase()) || courseShort.includes(search.toLowerCase());
     return matchCat && matchSearch;
   });
@@ -137,7 +136,7 @@ export default function CoursesPage() {
                 <div className="relative aspect-[4/3] overflow-hidden bg-muted">
                   <img
                     src={c.imageUrl || 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=400'}
-                    alt={getCourseTitle(c, lang)}
+                    alt={c.title}
                     loading="lazy"
                     className="h-full w-full object-cover transition-transform group-hover:scale-105"
                   />
@@ -147,10 +146,10 @@ export default function CoursesPage() {
                 </div>
                 <div className="flex flex-1 flex-col gap-3 p-6">
                   <div className="flex items-start gap-2">
-                    <h3 className="font-display text-xl font-bold leading-tight flex-1">{getCourseTitle(c, lang)}</h3>
-                    <SpeakButton text={getCourseTitle(c, lang) + '. ' + getCourseShort(c, lang)} />
+                    <h3 className="font-display text-xl font-bold leading-tight flex-1">{c.title}</h3>
+                    <SpeakButton text={c.title + '. ' + c.short} />
                   </div>
-                  <p className="flex-1 text-sm text-muted-foreground">{getCourseShort(c, lang)}</p>
+                  <p className="flex-1 text-sm text-muted-foreground">{c.short}</p>
                   <div className="flex items-center gap-4 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Clock className="h-3.5 w-3.5" /> {c.durationWeeks} {tr('courseWeeks')}

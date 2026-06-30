@@ -16,7 +16,6 @@ import { SpeakButton } from '../components/audio/SpeakButton';
 import { VirtualTutor } from '../components/tutor/VirtualTutor';
 import { offlineSyncService } from '../services/offlineSync.service';
 import { useDownloadsStore } from '../store/downloads.store';
-import { getCourseTitle, getCourseLong } from '../utils/course';
 
 type LessonView = 'list' | 'topic' | 'quiz';
 
@@ -342,7 +341,7 @@ export default function CourseDetailPage() {
 
           <VirtualTutor
             mode="lesson"
-            courseTitle={getCourseTitle(course, lang)}
+            courseTitle={course.title}
             courseSlug={courseId!}
             lessonTitle={activeLesson.title}
             lessonSummary={activeLesson.summary || ''}
@@ -487,7 +486,7 @@ export default function CourseDetailPage() {
 
           <VirtualTutor
             mode="quiz"
-            courseTitle={getCourseTitle(course, lang)}
+            courseTitle={course.title}
             courseSlug={courseId!}
             lessonTitle={activeLesson.title}
             lessonSummary={activeLesson.summary || ''}
@@ -518,10 +517,10 @@ export default function CourseDetailPage() {
                 {course.level} · {course.durationWeeks} {tr('courseWeeks')}
               </span>
               <div className="mt-3 flex items-start gap-3">
-                <h1 className="text-balance text-4xl font-bold md:text-5xl flex-1">{getCourseTitle(course, lang)}</h1>
-                <SpeakButton text={getCourseTitle(course, lang) + '. ' + getCourseLong(course, lang)} size="md" className="mt-1 shrink-0" />
+                <h1 className="text-balance text-4xl font-bold md:text-5xl flex-1">{course.title}</h1>
+                <SpeakButton text={course.title + '. ' + course.long} size="md" className="mt-1 shrink-0" />
               </div>
-              <p className="mt-4 text-lg text-muted-foreground">{getCourseLong(course, lang)}</p>
+              <p className="mt-4 text-lg text-muted-foreground">{course.long}</p>
               {user && (
                 <div className="mt-6">
                   <div className="mb-2 flex items-center justify-between text-sm">
@@ -576,7 +575,7 @@ export default function CourseDetailPage() {
             <div className="overflow-hidden rounded-3xl border-4 border-card shadow-warm">
               <img
                 src={course.imageUrl || 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=600'}
-                alt={getCourseTitle(course, lang)}
+                alt={course.title}
                 className="h-full w-full object-cover aspect-[4/3]"
               />
             </div>
