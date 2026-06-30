@@ -120,6 +120,19 @@ export function TutorChat(props: TutorChatProps) {
     const userMsg: Message = { role: 'user', content: text, ts: Date.now() };
     setHistory((prev) => [...prev, userMsg]);
 
+    if (!navigator.onLine) {
+      setTimeout(() => {
+        setAvatarState('idle');
+        const botMsg: Message = { 
+          role: 'assistant', 
+          content: 'Lo siento, me encuentro sin conexión a internet. Revisa el material de la lección para continuar.', 
+          ts: Date.now() 
+        };
+        setHistory((prev) => [...prev, botMsg]);
+      }, 500);
+      return;
+    }
+
     const historyForApi = history.slice(-16).map((m) => ({ role: m.role, content: m.content }));
 
     setIsStreaming(true);
