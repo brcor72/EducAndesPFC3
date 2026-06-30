@@ -58,7 +58,6 @@ export default function CourseDetailPage() {
     queryKey: ['course', courseId],
     queryFn: async () => {
       try {
-        if (!isOnline) throw new Error('Offline');
         return await coursesService.getOne(courseId!);
       } catch (err) {
         // Fallback to local storage if available
@@ -242,15 +241,12 @@ export default function CourseDetailPage() {
     }
     setIsDownloading(true);
     try {
-      // Fetch all lessons explicitly to construct the full offline course
+      // Download lessons
       const fullLessons = [];
       for (const l of lessons) {
         const lessonData = await coursesService.getLesson(courseId!, l.index);
         fullLessons.push(lessonData);
       }
-      
-      // Simulate heavy download for 10 seconds as requested
-      await new Promise(resolve => setTimeout(resolve, 10000));
       
       const completeCourse = { ...course, lessons: fullLessons };
       addDownload(user.id, completeCourse);

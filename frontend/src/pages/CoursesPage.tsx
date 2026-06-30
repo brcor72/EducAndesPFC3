@@ -45,7 +45,6 @@ export default function CoursesPage() {
     queryKey: ['courses'],
     queryFn: async () => {
       try {
-        if (!navigator.onLine) throw new Error('Offline');
         return await coursesService.getAll();
       } catch (err) {
         // Fallback to locally downloaded courses when offline
