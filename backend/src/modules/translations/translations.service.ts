@@ -1,4 +1,4 @@
-import Groq from 'groq-sdk';
+import OpenAI from 'openai';
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -12,40 +12,41 @@ const LANG_NAMES: Record<string, string> = {
 @Injectable()
 export class TranslationsService {
   private readonly logger = new Logger(TranslationsService.name);
-  private groq: Groq;
+  private openai: OpenAI;
 
   constructor(
     private prisma: PrismaService,
     private config: ConfigService,
   ) {
-    this.groq = new Groq({ apiKey: this.config.get<string>('GROQ_API_KEY') ?? '' });
+    this.openai = new OpenAI({ apiKey: this.config.get<string>('OPENAI_API_KEY') ?? '' });
   }
 
   private async translateText(text: string, targetLang: string, retries = 3): Promise<string> {
     const langDesc = LANG_NAMES[targetLang];
     for (let attempt = 0; attempt < retries; attempt++) {
       try {
-        const completion = await this.groq.chat.completions.create({
-          model: 'llama-3.1-8b-instant',
+        const response = await this.openai.chat.completions.create({
+          model: 'gpt-4o-mini',
           messages: [
             {
               role: 'system',
-              content: `You are an expert translator. Translate the following educational text to ${langDesc}.
+              content: `You are an expert translator specializing in indigenous Andean languages. Translate the following educational text to ${langDesc}.
 Return ONLY the translated text, no explanations, no quotes, no additional content.
 Preserve technical terms in Spanish if there is no natural equivalent.
-The audience is rural Andean community members learning about technology and agriculture.`,
+The audience is rural Andean community members learning about technology and agriculture.
+Do NOT repeat phrases or words. If you are unsure of a word, use the Spanish term.`,
             },
             { role: 'user', content: text },
           ],
-          temperature: 0.3,
+          temperature: 0.2,
           max_tokens: 2048,
         });
-        return completion.choices[0]?.message?.content?.trim() ?? text;
+        return response.choices[0]?.message?.content?.trim() ?? text;
       } catch (err: any) {
-        const is429 = err?.status === 429 || String(err).includes('429');
-        if (is429 && attempt < retries - 1) {
-          const wait = (attempt + 1) * 15_000;
-          this.logger.warn(`Rate limit hit, esperando ${wait / 1000}s antes de reintentar...`);
+        const isRateLimit = err?.status === 429 || String(err).includes('429');
+        if (isRateLimit && attempt < retries - 1) {
+          const wait = (attempt + 1) * 10_000;
+          this.logger.warn(`Rate limit, esperando ${wait / 1000}s...`);
           await new Promise(r => setTimeout(r, wait));
         } else {
           throw err;
@@ -71,6 +72,18 @@ The audience is rural Andean community members learning about technology and agr
       pendingAy:  total - withAy,
       pendingShp: total - withShp,
     };
+  }
+
+  async clearTranslations(lang: 'qu' | 'ay' | 'shp') {
+    const suffix      = lang.charAt(0).toUpperCase() + lang.slice(1);
+    const titleField   = `title${suffix}` as any;
+    const summaryField = `summary${suffix}` as any;
+    const detailField  = `detail${suffix}` as any;
+    await this.prisma.lesson.updateMany({
+      where: { deletedAt: null },
+      data: { [titleField]: null, [summaryField]: null, [detailField]: null },
+    });
+    return { cleared: lang };
   }
 
   async translateAll(
@@ -114,7 +127,6 @@ The audience is rural Andean community members learning about technology and agr
       }
     }
 
-    // Translate courses only when all lessons are done
     const remaining = await this.prisma.lesson.count({
       where: { deletedAt: null, [titleField]: null },
     });

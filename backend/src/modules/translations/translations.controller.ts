@@ -25,4 +25,11 @@ export class TranslationsController {
   translateAll(@Param('lang') lang: 'qu' | 'ay' | 'shp') {
     return this.svc.translateAll(lang);
   }
+
+  @Post('clear/:lang')
+  @Roles('admin')
+  @ApiOperation({ summary: '[Admin] Limpiar traducciones malas de un idioma' })
+  clear(@Param('lang') lang: 'qu' | 'ay' | 'shp') {
+    return this.svc.clearTranslations(lang);
+  }
 }
