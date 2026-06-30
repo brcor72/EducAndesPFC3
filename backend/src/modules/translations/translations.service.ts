@@ -62,7 +62,7 @@ The audience is rural Andean community members learning about technology and agr
   async translateAll(
     lang: 'qu' | 'ay' | 'shp',
     batch = 10,
-  ): Promise<{ translated: number; errors: number; remaining: number }> {
+  ): Promise<{ translated: number; errors: number; remaining: number; lastError?: string }> {
     const suffix      = lang.charAt(0).toUpperCase() + lang.slice(1);
     const titleField   = `title${suffix}` as any;
     const summaryField = `summary${suffix}` as any;
@@ -78,6 +78,7 @@ The audience is rural Andean community members learning about technology and agr
 
     let translated = 0;
     let errors = 0;
+    let lastError: string | undefined;
 
     for (const lesson of lessons) {
       try {
@@ -96,6 +97,7 @@ The audience is rural Andean community members learning about technology and agr
         this.logger.log(`[${lang}] ${lesson.title}`);
       } catch (err) {
         errors++;
+        lastError = String(err);
         this.logger.error(`Error traduciendo lección ${lesson.id}: ${err}`);
       }
     }
@@ -106,7 +108,7 @@ The audience is rural Andean community members learning about technology and agr
     });
     if (remaining === 0) await this.translateCourses(lang);
 
-    return { translated, errors, remaining };
+    return { translated, errors, remaining, lastError };
   }
 
   private async translateCourses(lang: 'qu' | 'ay' | 'shp') {
