@@ -214,6 +214,41 @@ Devuelve ÚNICAMENTE el texto traducido, sin explicaciones, sin comillas, sin co
     return { translated, errors, remaining, lastError };
   }
 
+  startAutoTranslate(lang: 'qu' | 'ay' | 'shp'): { status: string; lang: string } {
+    this.logger.log(`[AUTO] Iniciando traducción automática completa para: ${lang}`);
+    setImmediate(() => this.runAutoLoop(lang));
+    return { status: 'started', lang };
+  }
+
+  private async runAutoLoop(lang: 'qu' | 'ay' | 'shp') {
+    const suffix     = lang.charAt(0).toUpperCase() + lang.slice(1);
+    const titleField = `title${suffix}` as any;
+    let totalTranslated = 0;
+    let totalErrors = 0;
+    let batch = 0;
+
+    while (true) {
+      batch++;
+      try {
+        const result = await this.translateAll(lang, 3);
+        totalTranslated += result.translated;
+        totalErrors     += result.errors;
+        this.logger.log(
+          `[AUTO][${lang}] batch ${batch} — +${result.translated} | total: ${totalTranslated} | restantes: ${result.remaining}`,
+        );
+        if (result.remaining === 0) {
+          this.logger.log(`[AUTO][${lang}] ✅ COMPLETADO — ${totalTranslated} lecciones, ${totalErrors} errores`);
+          break;
+        }
+        // pausa entre batches para respetar rate limits
+        await new Promise(r => setTimeout(r, 3000));
+      } catch (err) {
+        this.logger.error(`[AUTO][${lang}] error en batch ${batch}: ${err}`);
+        await new Promise(r => setTimeout(r, 15_000));
+      }
+    }
+  }
+
   private async translateCourses(lang: 'qu' | 'ay' | 'shp') {
     const suffix     = lang.charAt(0).toUpperCase() + lang.slice(1);
     const titleField = `title${suffix}` as any;

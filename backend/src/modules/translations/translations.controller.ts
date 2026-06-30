@@ -26,6 +26,13 @@ export class TranslationsController {
     return this.svc.translateAll(lang);
   }
 
+  @Post('auto/:lang')
+  @Roles('admin')
+  @ApiOperation({ summary: '[Admin] Traducir TODAS las lecciones en background (devuelve inmediatamente)' })
+  autoTranslate(@Param('lang') lang: 'qu' | 'ay' | 'shp') {
+    return this.svc.startAutoTranslate(lang);
+  }
+
   @Post('clear/:lang')
   @Roles('admin')
   @ApiOperation({ summary: '[Admin] Limpiar traducciones malas de un idioma' })
