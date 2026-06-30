@@ -23,12 +23,23 @@ async function bootstrap() {
   app.use(helmet({ crossOriginEmbedderPolicy: false }));
   app.use(compression());
 
-  // CORS — acepta el frontend configurado + localhost para desarrollo
-  const isProduction = configService.get('NODE_ENV') === 'production';
+  // CORS — restringido a una lista de orígenes permitidos.
+  // Se configura por env (FRONTEND_URL, admite varios separados por coma)
+  // más los orígenes de desarrollo locales.
+  const allowedOrigins = [frontendUrl, 'http://localhost:5173', 'http://localhost:4173']
+    .filter(Boolean)
+    .flatMap((o) => o.split(',').map((s) => s.trim()))
+    .filter((o, i, arr) => o.length > 0 && arr.indexOf(o) === i);
+
   app.enableCors({
-    origin: isProduction
-      ? (origin: string | undefined, cb: Function) => cb(null, true) // acepta todos en producción (Railway/Vercel)
-      : (origin: string | undefined, cb: Function) => cb(null, true),
+    origin: (origin: string | undefined, cb: (err: Error | null, allow?: boolean) => void) => {
+      // Permitir peticiones sin Origin (curl, apps móviles, health checks) y los orígenes permitidos.
+      if (!origin || allowedOrigins.includes(origin)) {
+        cb(null, true);
+      } else {
+        cb(new Error(`Origen no permitido por CORS: ${origin}`));
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Refresh-Token'],
