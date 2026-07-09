@@ -1,0 +1,6 @@
+ALTER TABLE "lessons" ALTER COLUMN "titleQu"   TYPE TEXT;
+ALTER TABLE "lessons" ALTER COLUMN "titleAy"   TYPE TEXT;
+ALTER TABLE "lessons" ALTER COLUMN "titleShp"  TYPE TEXT;
+ALTER TABLE "lessons" ALTER COLUMN "summaryQu" TYPE TEXT;
+ALTER TABLE "lessons" ALTER COLUMN "summaryAy" TYPE TEXT;
+ALTER TABLE "lessons" ALTER COLUMN "summaryShp" TYPE TEXT;

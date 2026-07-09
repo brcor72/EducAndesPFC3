@@ -1,0 +1,15 @@
+-- Lesson translation columns
+ALTER TABLE "lessons" ADD COLUMN IF NOT EXISTS "titleQu"    VARCHAR(200);
+ALTER TABLE "lessons" ADD COLUMN IF NOT EXISTS "titleAy"    VARCHAR(200);
+ALTER TABLE "lessons" ADD COLUMN IF NOT EXISTS "titleShp"   VARCHAR(200);
+ALTER TABLE "lessons" ADD COLUMN IF NOT EXISTS "summaryQu"  VARCHAR(400);
+ALTER TABLE "lessons" ADD COLUMN IF NOT EXISTS "summaryAy"  VARCHAR(400);
+ALTER TABLE "lessons" ADD COLUMN IF NOT EXISTS "summaryShp" VARCHAR(400);
+ALTER TABLE "lessons" ADD COLUMN IF NOT EXISTS "detailQu"   TEXT;
+ALTER TABLE "lessons" ADD COLUMN IF NOT EXISTS "detailAy"   TEXT;
+ALTER TABLE "lessons" ADD COLUMN IF NOT EXISTS "detailShp"  TEXT;
+
+-- Course missing translation columns
+ALTER TABLE "courses" ADD COLUMN IF NOT EXISTS "titleShp"  VARCHAR(200);
+ALTER TABLE "courses" ADD COLUMN IF NOT EXISTS "shortAy"   VARCHAR(300);
+ALTER TABLE "courses" ADD COLUMN IF NOT EXISTS "shortShp"  VARCHAR(300);
